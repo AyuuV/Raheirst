@@ -1,5 +1,5 @@
 #ifndef __ISDEFINITION_DOCUMENT_HEADER
-#define __ISDEFINITION_DOCUMENT_HEADER 2
+#define __ISDEFINITION_DOCUMENT_HEADER 3
 
 #include "Miscellaneous.h"
 

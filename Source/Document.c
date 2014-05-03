@@ -1,5 +1,6 @@
 #include "Document.h"
 #include "Miscellaneous.h"
+#include "Support.h"
 
 #include <stdio.h>
 
