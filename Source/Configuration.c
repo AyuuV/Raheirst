@@ -4,11 +4,11 @@
 
 #include <stdio.h>
 
-#ifdef __CONFIGURATION_SOURCE_DEFINE_MAIN_DEFINITION
+#ifdef __ISDEFINITION_CONFIGURATION_SOURCE_DEFINE_MAIN
 
-#define DEFINITION_CONFIGURATION_MAIN_ERROR -1
-#define DEFINITION_CONFIGURATION_MAIN_SUCCESS 0
-#define DEFINITION_CONFIGURATION_MAIN_FAILURE 1
+#define __ISDEFINITION_CONFIGURATION_MAIN_ERROR -1
+#define __ISDEFINITION_CONFIGURATION_MAIN_SUCCESS 0
+#define __ISDEFINITION_CONFIGURATION_MAIN_FAILURE 1
 
 int main(
 	const int __localParameter_ArgumentLimit,
@@ -22,7 +22,7 @@ int main(
 
 	fprintf(stdout,"Processor Time: %ju\nWall Time: %ju\n",__ISFunction_RetrieveProcessorTime(1000000,__localVariable_InitialTimeP),__ISFunction_RetrieveWallTime(__localVariable_InitialTimeW));
 
-	return DEFINITION_CONFIGURATION_MAIN_SUCCESS;
+	return __ISDEFINITION_CONFIGURATION_MAIN_SUCCESS;
 }
 
 #endif
