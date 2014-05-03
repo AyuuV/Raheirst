@@ -1,4 +1,5 @@
 #include "Configuration.h"
+#include "Document.h"
 #include "Miscellaneous.h"
 
 #include <stdio.h>
