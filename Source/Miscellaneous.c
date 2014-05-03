@@ -25,5 +25,5 @@ __ISFunction_RetrieveWallTime(
 {
 	struct timeval __localVariable_TimevalStructure;
 	assert(!gettimeofday(&__localVariable_TimevalStructure,NULL));
-	return ((__localVariable_TimevalStructure.tv_sec*1000000)+__localVariable_TimevalStructure.tv_usec)-__localParameter_Offset;
+	return ((__ISType_Time)((__localVariable_TimevalStructure.tv_sec*1000000)+__localVariable_TimevalStructure.tv_usec))-__localParameter_Offset;
 }
