@@ -22,7 +22,7 @@ char* __ISSupport_CopyCharArray(
 	size_t __localVariable_PrimarySize = 0;
 	size_t __localVariable_SecondarySize = 0;
 
-	if(__localParameter_PrimarySource) { __localVariable_PrimarySize = sizeof(*__localParameter_PrimarySource)*__localVariable_PrimarySize; }
+	if(__localParameter_PrimarySource) { __localVariable_PrimarySize = sizeof(*__localParameter_PrimarySource)*__localParameter_PrimaryLength; }
 	if(__localParameter_SecondarySource) { __localVariable_SecondarySize = sizeof(*__localParameter_SecondarySource)*__localParameter_SecondaryLength; }
 
 	if(!(__localVariable_PrimarySize+__localVariable_SecondarySize)) { return NULL; }
@@ -67,9 +67,8 @@ char* __ISSupport_RetrieveParameter(
 
 	bool __localVariable_Match = false;
 
-	char __localVariable_Delimiter[3] = {'=',':','\0'};
-	char __localVariable_Terminator[2] = {';','\0'};
-	char __localVariable_TerminatingSequence[1] = {'\0'};
+	char __localVariable_Delimiter[1] = {'='};
+	char __localVariable_Terminator[1] = {'\0'};
 	char* __localVariable_Value = NULL;
 	int __localVariable_Index = 0;
 
@@ -92,8 +91,8 @@ char* __ISSupport_RetrieveParameter(
 			__localVariable_Terminator,
 			sizeof(__localVariable_Delimiter),
 			sizeof(__localVariable_Terminator),
-			__localVariable_TerminatingSequence,
-			sizeof(__localVariable_TerminatingSequence)))
+			__localVariable_Terminator,
+			sizeof(__localVariable_Terminator)))
 		{ if(strcasecmp(__localParameter_Name,__localVariable_ParameterName)==0) { __localVariable_Match = true; } }
 
 		if(__localVariable_ParameterName) { free(__localVariable_ParameterName); }

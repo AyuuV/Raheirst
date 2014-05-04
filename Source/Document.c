@@ -3,6 +3,9 @@
 #include "Support.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+
+#include <strings.h>
 
 #ifdef __ISDEFINITION_DOCUMENT_SOURCE_DEFINE_MAIN
 
@@ -14,16 +17,38 @@ int main(
 	const int __localParameter_ArgumentLimit,
 	const char** __localParameter_ArgumentArray)
 {
-	__ISType_Time __localVariable_InitialTimeP = __ISFunction_RetrieveProcessorTime(1000000,0);
-	__ISType_Time __localVariable_InitialTimeW = __ISFunction_RetrieveWallTime(0);
+	__ISType_Time __localVariable_InitialTimeProcess = __ISFunction_RetrieveProcessorTime(1000000,0);
+	__ISType_Time __localVariable_InitialTimeWall = __ISFunction_RetrieveWallTime(0);
 
-	fprintf(stdout,"%s\n",__ISSupport_RetrieveParameter(
+	char* __localVariable_Acknowledgement = __ISSupport_RetrieveParameter(
 		__localParameter_ArgumentLimit-1,
 		&(__localParameter_ArgumentArray[1]),
-		"FILE",
-		NULL));
+		"ACKNOWLEDGEMENT",
+		NULL);
 
-	fprintf(stdout,"Processor Time: %ju\nWall Time: %ju\n",__ISFunction_RetrieveProcessorTime(1000000,__localVariable_InitialTimeP),__ISFunction_RetrieveWallTime(__localVariable_InitialTimeW));
+	char* __localVariable_TimerMode = __ISSupport_RetrieveParameter(
+		__localParameter_ArgumentLimit-1,
+		&(__localParameter_ArgumentArray[1]),
+		"TIMER",
+		NULL);
+
+	if(__localVariable_Acknowledgement) {
+		fprintf(stderr,"%s\n",__localVariable_Acknowledgement);
+		free(__localVariable_Acknowledgement); }
+
+	// Stuff
+
+	if(__localVariable_TimerMode) {
+		if(strcasecmp(__localVariable_TimerMode,"WALL")==0) { fprintf(stderr,"Program Wall Microseconds: %ju\n",__ISFunction_RetrieveWallTime(__localVariable_InitialTimeWall)); }
+		else if(strcasecmp(__localVariable_TimerMode,"PROCESS")==0) { fprintf(stderr,"Program Process Microseconds: %ju\n",__ISFunction_RetrieveProcessorTime(1000000,__localVariable_InitialTimeProcess)); }
+		else if(strcasecmp(__localVariable_TimerMode,"BOTH")==0) {
+			 fprintf(
+				stderr,
+				"Program Process Microseconds: %ju\nProgram Wall Microseconds: %ju\n",
+				__ISFunction_RetrieveProcessorTime(1000000,__localVariable_InitialTimeProcess),
+				__ISFunction_RetrieveWallTime(__localVariable_InitialTimeWall));
+		}
+		free(__localVariable_TimerMode); }
 	return __ISDEFINITION_DOCUMENT_MAIN_SUCCESS;
 }
 
