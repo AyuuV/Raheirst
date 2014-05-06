@@ -38,6 +38,16 @@ struct __ISStructure_MemoryBuffer {
 };
 
 struct __ISStructure_MemoryBuffer*
+__ISFunction_AppendMemoryBuffer(
+	struct __ISStructure_MemoryBuffer* __localParameter_Primary,
+	struct __ISStructure_MemoryBuffer* __localParameter_Secondary);
+
+struct __ISStructure_MemoryBuffer*
+__ISFunction_CollateMemoryBuffers(
+	const struct __ISStructure_MemoryBuffer* __localParameter_Primary,
+	const struct __ISStructure_MemoryBuffer* __localParameter_Secondary);
+
+struct __ISStructure_MemoryBuffer*
 __ISFunction_CreateMemoryBufferFromArrays(
 	const void* __localParameter_PrimaryArray,
 	const void* __localParameter_SecondaryArray,
@@ -53,6 +63,11 @@ struct __ISStructure_FIFOStackObject*
 __ISFunction_PushFIFOStack(
 	struct __ISStructure_FIFOStackObject* __localParameter_FIFOStack,
 	void* __localParameter_Object);
+
+__ISType_Size
+__ISFunction_RetrieveMemoryBufferLength(
+	const struct __ISStructure_MemoryBuffer* __localParameter_MemoryBuffer,
+	__ISType_Size* __localParameter_MemoryBuffers);
 
 __ISType_Time
 __ISFunction_RetrieveProcessorTime(

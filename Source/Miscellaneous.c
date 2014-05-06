@@ -12,6 +12,63 @@
 #include <time.h>
 
 struct __ISStructure_MemoryBuffer*
+__ISFunction_AppendMemoryBuffer(
+	struct __ISStructure_MemoryBuffer* __localParameter_Primary,
+	struct __ISStructure_MemoryBuffer* __localParameter_Secondary)
+{
+	struct __ISStructure_MemoryBuffer* __localVariable_Primary = __localParameter_Primary;
+	struct __ISStructure_MemoryBuffer* __localVariable_Secondary = __localParameter_Secondary;
+	while(__localVariable_Primary&&__localVariable_Primary->Next) { __localVariable_Primary = __localVariable_Primary->Next; }
+	while(__localVariable_Secondary&&__localVariable_Secondary->Previous) { __localVariable_Secondary = __localVariable_Secondary->Previous; }
+	if(__localVariable_Primary) { __localVariable_Primary->Next = __localVariable_Secondary; }
+	if(__localVariable_Secondary) { __localVariable_Secondary->Previous = __localVariable_Primary; }
+	if(__localVariable_Primary) { return __localParameter_Primary; }
+	else { return __localVariable_Secondary; }
+}
+
+struct __ISStructure_MemoryBuffer*
+__ISFunction_CollateMemoryBuffers(
+	const struct __ISStructure_MemoryBuffer* __localParameter_Primary,
+	const struct __ISStructure_MemoryBuffer* __localParameter_Secondary)
+{
+	__ISType_Size __localVariable_Index = 0;
+	__ISType_Size __localVariable_PrimarySize = __ISFunction_RetrieveMemoryBufferLength(__localParameter_Primary,NULL);
+	__ISType_Size __localVariable_SecondarySize = __ISFunction_RetrieveMemoryBufferLength(__localParameter_Secondary,NULL);
+	struct __ISStructure_MemoryBuffer* __localVariable_MemoryBuffer = (struct __ISStructure_MemoryBuffer*)malloc(sizeof(*__localVariable_MemoryBuffer));
+	assert(__localVariable_MemoryBuffer);
+	__localVariable_MemoryBuffer->Next = NULL;
+	__localVariable_MemoryBuffer->Previous = NULL;
+	if((__localVariable_MemoryBuffer->Size=__localVariable_PrimarySize+__localVariable_SecondarySize)) {
+		__localVariable_MemoryBuffer->Data = (__ISType_MemoryUnit*)malloc(__localVariable_MemoryBuffer->Size);
+		assert(__localVariable_MemoryBuffer->Data);
+		__ISType_Size __localVariable_TotalIndex = 0;
+		struct __ISStructure_MemoryBuffer* __localVariable_TargetMemoryBuffer = NULL;
+		if(__localVariable_PrimarySize&&__localParameter_Primary) {
+			__localVariable_TargetMemoryBuffer = (struct __ISStructure_MemoryBuffer*)__localParameter_Primary;
+			while(__localVariable_TargetMemoryBuffer->Previous) { __localVariable_TargetMemoryBuffer = __localVariable_TargetMemoryBuffer->Previous; }
+			while(__localVariable_TargetMemoryBuffer) {
+				for(__localVariable_Index=0;
+					__localVariable_Index<__localVariable_TargetMemoryBuffer->Size;
+					__localVariable_Index++,
+					__localVariable_TotalIndex++)
+				{ __localVariable_MemoryBuffer->Data[__localVariable_TotalIndex] = __localVariable_TargetMemoryBuffer->Data[__localVariable_Index]; }
+				__localVariable_TargetMemoryBuffer = __localVariable_TargetMemoryBuffer->Next; } }
+		if(__localVariable_SecondarySize&&__localParameter_Secondary) {
+			__localVariable_TargetMemoryBuffer = (struct __ISStructure_MemoryBuffer*)__localParameter_Secondary;
+			while(__localVariable_TargetMemoryBuffer->Previous) { __localVariable_TargetMemoryBuffer = __localVariable_TargetMemoryBuffer->Previous; }
+			while(__localVariable_TargetMemoryBuffer) {
+				for(__localVariable_Index=0;
+					__localVariable_Index<__localVariable_TargetMemoryBuffer->Size;
+					__localVariable_Index++,
+					__localVariable_TotalIndex++)
+				{ __localVariable_MemoryBuffer->Data[__localVariable_TotalIndex] = __localVariable_TargetMemoryBuffer->Data[__localVariable_Index]; }
+				__localVariable_TargetMemoryBuffer = __localVariable_TargetMemoryBuffer->Next; } }
+	}
+	else { __localVariable_MemoryBuffer->Data = NULL; }
+	return __localVariable_MemoryBuffer;
+}
+
+struct __ISStructure_MemoryBuffer*
 __ISFunction_CreateMemoryBufferFromArrays(
 	const void* __localParameter_PrimaryArray,
 	const void* __localParameter_SecondaryArray,
@@ -66,6 +123,25 @@ __ISFunction_PushFIFOStack(
 	__localVariable_NewFIFOStackObject->Object = __localParameter_Object;
 	__localVariable_NewFIFOStackObject->Previous = __localParameter_FIFOStack;
 	return __localVariable_NewFIFOStackObject;
+}
+
+__ISType_Size
+__ISFunction_RetrieveMemoryBufferLength(
+	const struct __ISStructure_MemoryBuffer* __localParameter_MemoryBuffer,
+	__ISType_Size* __localParameter_MemoryBuffers)
+{
+	__ISType_Size __localVariable_Length = 0;
+	struct __ISStructure_MemoryBuffer* __localVariable_MemoryBuffer = (struct __ISStructure_MemoryBuffer*)__localParameter_MemoryBuffer;
+	while(__localVariable_MemoryBuffer&&__localVariable_MemoryBuffer->Previous) { __localVariable_MemoryBuffer = __localVariable_MemoryBuffer->Previous; }
+	if(__localParameter_MemoryBuffers) { *__localParameter_MemoryBuffers = 0; }
+	if(__localVariable_MemoryBuffer) {
+		for(__localVariable_Length=0;
+			__localVariable_MemoryBuffer;
+			__localVariable_Length+=__localVariable_MemoryBuffer->Size,
+			__localVariable_MemoryBuffer=__localVariable_MemoryBuffer->Next)
+		{ if(__localParameter_MemoryBuffers) { (*__localParameter_MemoryBuffers)++; } }
+	}
+	return __localVariable_Length;
 }
 
 __ISType_Time

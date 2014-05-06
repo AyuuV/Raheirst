@@ -2,6 +2,8 @@
 #include "Miscellaneous.h"
 #include "Support.h"
 
+#include <assert.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -53,3 +55,51 @@ int main(
 }
 
 #endif
+
+struct __ISStructure_DocumentNode*
+__ISFunction_InsertDocumentNode(
+	struct __ISStructure_DocumentNode* __localParameter_Parent,
+	struct __ISStructure_DocumentNode* __localParameter_SiblingNode,
+	struct __ISStructure_MemoryBuffer* __localParameter_NodeName,
+	struct __ISStructure_MemoryBuffer* __localParameter_NodeValue,
+	bool __localParameter_Append)
+{
+	struct __ISStructure_DocumentNode* __localVariable_Node = malloc(sizeof(*__localVariable_Node));
+	assert(__localVariable_Node);
+
+	if(__localParameter_SiblingNode) { assert(__localParameter_SiblingNode->Parent==__localParameter_Parent); }
+
+	__localVariable_Node->Children.Oldest = NULL;
+	__localVariable_Node->Children.Youngest = NULL;
+	__localVariable_Node->Parent = __localParameter_Parent;
+
+	__localVariable_Node->Name = __ISFunction_CollateMemoryBuffers(__localParameter_NodeName,NULL);
+	__localVariable_Node->Value = __ISFunction_CollateMemoryBuffers(__localParameter_NodeValue,NULL);
+
+	if(__localParameter_Append) {
+		__localVariable_Node->Siblings.Older = __localParameter_SiblingNode;
+		__localVariable_Node->Siblings.Younger = NULL;
+		if(__localParameter_SiblingNode) {
+			if(__localParameter_SiblingNode->Siblings.Younger) {
+				__localVariable_Node->Siblings.Younger = __localParameter_SiblingNode->Siblings.Younger;
+				__localParameter_SiblingNode->Siblings.Younger->Siblings.Older = __localVariable_Node; }
+			if(__localParameter_Parent&&__localParameter_Parent->Children.Youngest==__localParameter_SiblingNode) { __localParameter_Parent->Children.Youngest = __localVariable_Node; }
+			__localParameter_SiblingNode->Siblings.Younger = __localVariable_Node; }
+		else {
+			if(!__localParameter_Parent->Children.Oldest) { __localParameter_Parent->Children.Oldest = __localVariable_Node; }
+			__localParameter_Parent->Children.Youngest = __localVariable_Node; } }
+	else {
+		__localVariable_Node->Siblings.Older = NULL;
+		__localVariable_Node->Siblings.Younger = __localParameter_SiblingNode;
+		if(__localParameter_SiblingNode) {
+			if(__localParameter_SiblingNode->Siblings.Older) {
+				__localVariable_Node->Siblings.Older = __localParameter_SiblingNode->Siblings.Older;
+				__localParameter_SiblingNode->Siblings.Older->Siblings.Younger = __localVariable_Node; }
+			if(__localParameter_Parent&&__localParameter_Parent->Children.Oldest==__localParameter_SiblingNode) { __localParameter_Parent->Children.Oldest = __localVariable_Node; }
+			__localParameter_SiblingNode->Siblings.Older = __localVariable_Node; }
+		else {
+			if(!__localParameter_Parent->Children.Youngest) { __localParameter_Parent->Children.Youngest = __localVariable_Node; }
+			__localParameter_Parent->Children.Oldest = __localVariable_Node; } }
+
+	return __localVariable_Node;
+}

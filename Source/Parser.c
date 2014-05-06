@@ -63,7 +63,6 @@ __ISFunction_ParseStream(
 		__localVariable_NewDictionary);
 
 	while(fread(&__localVariable_Current,sizeof(__localVariable_Current),1,__localParameter_Stream)==1) {
-		// Stuff
 	}
 
 	return __localVariable_MemoryBuffer;
