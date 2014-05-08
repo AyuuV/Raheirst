@@ -54,6 +54,11 @@ __ISFunction_CreateMemoryBufferFromArrays(
 	const __ISType_Size __localParameter_PrimaryLength,
 	const __ISType_Size __localParameter_SecondaryLength);
 
+bool
+__ISFunction_MatchMemoryBuffers(
+	const struct __ISStructure_MemoryBuffer* __localParameter_Primary,
+	const struct __ISStructure_MemoryBuffer* __localParameter_Secondary);
+
 struct __ISStructure_FIFOStackObject*
 __ISFunction_PopFIFOStack(
 	struct __ISStructure_FIFOStackObject* __localParameter_FIFOStack,

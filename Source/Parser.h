@@ -30,4 +30,9 @@ void
 __ISFunction_ParseStreamReleaseVariable(
 	struct __ISStructure_VariableItem* __localParameter_Variable);
 
+struct __ISStructure_VariableItem*
+__ISFunction_ParseStreamRetrieveVariable(
+	struct __ISStructure_FIFOStackObject* __localParameter_Variables,
+	const struct __ISStructure_MemoryBuffer* __localParameter_Name);
+
 #endif

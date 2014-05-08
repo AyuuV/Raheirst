@@ -101,6 +101,31 @@ __ISFunction_CreateMemoryBufferFromArrays(
 	return __localVariable_ResultingMemoryBuffer;
 }
 
+bool
+__ISFunction_MatchMemoryBuffers(
+	const struct __ISStructure_MemoryBuffer* __localParameter_Primary,
+	const struct __ISStructure_MemoryBuffer* __localParameter_Secondary)
+{
+	__ISType_Size __localVariable_Index = 0;
+	struct __ISStructure_MemoryBuffer* __localVariable_Primary = (struct __ISStructure_MemoryBuffer*)__localParameter_Primary;
+	struct __ISStructure_MemoryBuffer* __localVariable_Secondary = (struct __ISStructure_MemoryBuffer*)__localParameter_Secondary;
+	while(__localVariable_Primary->Previous) {__localVariable_Primary = __localVariable_Primary->Previous; }
+	while(__localVariable_Secondary->Previous) {__localVariable_Secondary = __localVariable_Secondary->Previous; }
+	if(__localVariable_Primary==__localVariable_Secondary) { return true; }
+	if(!__localVariable_Primary) { return false; }
+	while(__localVariable_Primary) {
+		if(!__localVariable_Secondary) { return false; }
+		if(__localVariable_Primary->Size!=__localVariable_Secondary->Size) { return false; }
+		for(__localVariable_Index=0;
+			__localVariable_Index<__localVariable_Primary->Size;
+			__localVariable_Index++)
+		{ if(__localVariable_Primary->Data[__localVariable_Index]!=__localVariable_Secondary->Data[__localVariable_Index]) { return false; } }
+		__localVariable_Primary = __localVariable_Primary->Next;
+		__localVariable_Secondary = __localVariable_Secondary->Next;
+		if((__localVariable_Primary&&__localVariable_Secondary)!=(__localVariable_Primary||__localVariable_Secondary)) { return false; } }
+	return true;
+}
+
 struct __ISStructure_FIFOStackObject*
 __ISFunction_PopFIFOStack(
 	struct __ISStructure_FIFOStackObject* __localParameter_FIFOStack,
@@ -145,7 +170,6 @@ __ISFunction_ReleaseMemoryBuffer(
 	const bool __localParameter_ReleaseAll)
 {
 	struct __ISStructure_MemoryBuffer* __localVariable_MemoryBuffer = __localParameter_MemoryBuffer;
-	if(__localParameter_ReleaseAll) {  }
 	if(__localParameter_ReleaseAll) {
 		struct __ISStructure_MemoryBuffer* __localVariable_OldMemoryBuffer = NULL;
 		while(__localVariable_MemoryBuffer->Previous) { __localVariable_MemoryBuffer = __localVariable_MemoryBuffer->Previous; }
@@ -154,7 +178,7 @@ __ISFunction_ReleaseMemoryBuffer(
 			__localVariable_OldMemoryBuffer = __localVariable_MemoryBuffer;
 			__localVariable_MemoryBuffer = __localVariable_MemoryBuffer->Next;
 			free(__localVariable_OldMemoryBuffer); } }
-	else {
+	else if(__localParameter_MemoryBuffer) {
 		if(__localVariable_MemoryBuffer->Data) { free(__localVariable_MemoryBuffer->Data); }
 		if(__localVariable_MemoryBuffer->Next) { __localVariable_MemoryBuffer->Next->Previous = __localVariable_MemoryBuffer->Previous; }
 		if(__localVariable_MemoryBuffer->Previous) { __localVariable_MemoryBuffer->Previous->Next = __localVariable_MemoryBuffer->Next; }

@@ -75,6 +75,28 @@ __ISFunction_ParseStream(
 		__localVariable_Character!=__localParameter_Terminator)
 	{
 		switch(__localVariable_Character) {
+			case('"'): {
+				struct __ISStructure_MemoryBuffer* __localVariable_Name = __ISFunction_ParseStream(
+					__localParameter_Stream,
+					__localParameter_Functions,
+					__localParameter_Variables,
+					'"',
+					false);
+				struct __ISStructure_VariableItem* __localVariable_Variable = __ISFunction_ParseStreamRetrieveVariable(
+					__localParameter_Variables,
+					__localVariable_Name);
+				if(__localVariable_Variable) {
+					struct __ISStructure_MemoryBuffer* __localVariable_NewMemoryBuffer = __ISFunction_CollateMemoryBuffers(
+						__localVariable_Variable->Value,
+						NULL);
+					assert(__localVariable_NewMemoryBuffer);
+					__localVariable_MemoryBuffer = __ISFunction_AppendMemoryBuffer(
+						__localVariable_MemoryBuffer,
+						__localVariable_NewMemoryBuffer);
+					__ISFunction_ReleaseMemoryBuffer(
+						__localVariable_Name,
+						true); }
+				break; }
 			case(':'): {
 				struct __ISStructure_VariableItem* __localVariable_Variable = (struct __ISStructure_VariableItem*)malloc(sizeof(*__localVariable_Variable));
 				assert(__localVariable_Variable);
@@ -90,9 +112,18 @@ __ISFunction_ParseStream(
 					__localParameter_Variables,
 					';',
 					true);
-				__localParameter_Variables->Object = __ISFunction_PushFIFOStack(
+				struct __ISStructure_VariableItem* __localVariable_SetVariable = __ISFunction_ParseStreamRetrieveVariable(
 					__localParameter_Variables,
-					__localVariable_Variable);
+					__localVariable_Variable->Name);
+				if(__localVariable_SetVariable) {
+					__ISFunction_ReleaseMemoryBuffer(__localVariable_SetVariable->Value,true);
+					__localVariable_SetVariable->Value = __localVariable_Variable->Value;
+					__localVariable_Variable->Value = NULL;
+					__ISFunction_ParseStreamReleaseVariable(__localVariable_Variable); }
+				else {
+					__localParameter_Variables->Object = __ISFunction_PushFIFOStack(
+						__localParameter_Variables->Object,
+						__localVariable_Variable); }
 				break; }
 			case('['): {
 				struct __ISStructure_MemoryBuffer* __localVariable_TemporaryMemoryBuffer = __ISFunction_ParseStream(
@@ -101,6 +132,18 @@ __ISFunction_ParseStream(
 					__localParameter_Variables,
 					']',
 					false);
+				__ISFunction_AppendMemoryBuffer(
+					__localVariable_MemoryBuffer,
+					__localVariable_TemporaryMemoryBuffer);
+				if(__localVariable_TemporaryMemoryBuffer) { __localVariable_MemoryBuffer = __localVariable_TemporaryMemoryBuffer; }
+				break; }
+			case('{'): {
+				struct __ISStructure_MemoryBuffer* __localVariable_TemporaryMemoryBuffer = __ISFunction_ParseStream(
+					__localParameter_Stream,
+					__localParameter_Functions,
+					__localParameter_Variables,
+					'}',
+					true);
 				__ISFunction_AppendMemoryBuffer(
 					__localVariable_MemoryBuffer,
 					__localVariable_TemporaryMemoryBuffer);
@@ -145,7 +188,7 @@ __ISFunction_ParseStream(
 		free);
 	__ISFunction_ReleaseFIFOStack(
 		__localParameter_Variables->Object,
-		(void*)__ISFunction_ParseStreamReleaseVariable);
+		(void (*)(void*))__ISFunction_ParseStreamReleaseVariable);
 	__ISFunction_PopFIFOStack(
 		__localParameter_Functions,
 		NULL);
@@ -176,9 +219,25 @@ __ISFunction_ParseStreamReleaseVariable(
 	assert(__localParameter_Variable);
 	__ISFunction_ReleaseMemoryBuffer(
 		__localParameter_Variable->Name,
-		true);
+			true);
 	__ISFunction_ReleaseMemoryBuffer(
 		__localParameter_Variable->Value,
 		true);
 	return;
+}
+
+struct __ISStructure_VariableItem*
+__ISFunction_ParseStreamRetrieveVariable(
+	struct __ISStructure_FIFOStackObject* __localParameter_Variables,
+	const struct __ISStructure_MemoryBuffer* __localParameter_Name)
+{
+	if(!__localParameter_Name) { return NULL; }
+	struct __ISStructure_FIFOStackObject* __localVariable_Variables = __localParameter_Variables;
+	while(__localVariable_Variables) {
+		struct __ISStructure_FIFOStackObject* __localVariable_SectionVariables = (struct __ISStructure_FIFOStackObject*)__localVariable_Variables->Object;
+		while(__localVariable_SectionVariables) {
+			if(__ISFunction_MatchMemoryBuffers(__localParameter_Name,((struct __ISStructure_VariableItem*)__localVariable_SectionVariables->Object)->Name)) { return __localVariable_SectionVariables->Object; }
+			__localVariable_SectionVariables = __localVariable_SectionVariables->Previous; }
+		__localVariable_Variables = __localVariable_Variables->Previous; }
+	return NULL;
 }
