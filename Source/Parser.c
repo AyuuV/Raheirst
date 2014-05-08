@@ -35,7 +35,8 @@ int main(
 		stdin,
 		__localVariable_Functions,
 		__localVariable_Variables,
-		__localVariable_Terminator[0])))
+		__localVariable_Terminator[0],
+		true)))
 	{
 		__ISFunction_WriteMemoryBufferToStream(
 			stdout,
@@ -52,7 +53,8 @@ __ISFunction_ParseStream(
 	FILE* __localParameter_Stream,
 	struct __ISStructure_FIFOStackObject* __localParameter_Functions,
 	struct __ISStructure_FIFOStackObject* __localParameter_Variables,
-	const char __localParameter_Terminator)
+	const char __localParameter_Terminator,
+	const bool __localParameter_WhitespaceIgnorant)
 {
 	bool __localVariable_ParseStream = true;
 	char __localVariable_Character = '\0';
@@ -67,14 +69,64 @@ __ISFunction_ParseStream(
 	assert(__localParameter_Functions);
 	assert(__localParameter_Variables);
 
-	while(__localVariable_ParseStream&&fread(&__localVariable_Character,1,1,__localParameter_Stream)==1&&
+	while(__localVariable_ParseStream&&
+		ferror(__localParameter_Stream)==0&&
+		fread(&__localVariable_Character,1,1,__localParameter_Stream)==1&&
 		__localVariable_Character!=__localParameter_Terminator)
 	{
 		switch(__localVariable_Character) {
+			case(':'): {
+				struct __ISStructure_VariableItem* __localVariable_Variable = (struct __ISStructure_VariableItem*)malloc(sizeof(*__localVariable_Variable));
+				assert(__localVariable_Variable);
+				__localVariable_Variable->Name = __ISFunction_ParseStream(
+					__localParameter_Stream,
+					__localParameter_Functions,
+					__localParameter_Variables,
+					'=',
+					true);
+				__localVariable_Variable->Value = __ISFunction_ParseStream(
+					__localParameter_Stream,
+					__localParameter_Functions,
+					__localParameter_Variables,
+					';',
+					true);
+				__localParameter_Variables->Object = __ISFunction_PushFIFOStack(
+					__localParameter_Variables,
+					__localVariable_Variable);
+				break; }
+			case('['): {
+				struct __ISStructure_MemoryBuffer* __localVariable_TemporaryMemoryBuffer = __ISFunction_ParseStream(
+					__localParameter_Stream,
+					__localParameter_Functions,
+					__localParameter_Variables,
+					']',
+					false);
+				__ISFunction_AppendMemoryBuffer(
+					__localVariable_MemoryBuffer,
+					__localVariable_TemporaryMemoryBuffer);
+				if(__localVariable_TemporaryMemoryBuffer) { __localVariable_MemoryBuffer = __localVariable_TemporaryMemoryBuffer; }
+				break; }
+			case('!'): {
+				__ISFunction_ParseStreamIgnoreComment(
+					__localParameter_Stream,
+					'!');
+				break; }
+			case('#'): {
+				__ISFunction_ParseStreamIgnoreComment(
+					__localParameter_Stream,
+					'\n');
+				break; }
 			case('\\'): { if(fread(&__localVariable_Character,1,1,__localParameter_Stream)!=1) {
 				__localParameter_Stream = false;
 				break; } }
 			default: {
+				if(__localParameter_WhitespaceIgnorant) {
+					if(__localVariable_Character==' '||
+						__localVariable_Character=='\0'||
+						__localVariable_Character=='\f'||
+						__localVariable_Character=='\n'||
+						__localVariable_Character=='\t')
+					{ continue; } }
 				struct __ISStructure_MemoryBuffer* __localVariable_Temporary_MemoryBuffer = __ISFunction_CreateMemoryBufferFromArrays(
 					&(__localVariable_Character),
 					NULL,
@@ -83,7 +135,7 @@ __ISFunction_ParseStream(
 				__ISFunction_AppendMemoryBuffer(
 					__localVariable_MemoryBuffer,
 					__localVariable_Temporary_MemoryBuffer);
-				__localVariable_MemoryBuffer = __localVariable_Temporary_MemoryBuffer;
+				if(__localVariable_Temporary_MemoryBuffer) { __localVariable_MemoryBuffer = __localVariable_Temporary_MemoryBuffer; }
 				break; }
 		}
 	}
@@ -93,7 +145,7 @@ __ISFunction_ParseStream(
 		free);
 	__ISFunction_ReleaseFIFOStack(
 		__localParameter_Variables->Object,
-		free);
+		(void*)__ISFunction_ParseStreamReleaseVariable);
 	__ISFunction_PopFIFOStack(
 		__localParameter_Functions,
 		NULL);
@@ -101,4 +153,32 @@ __ISFunction_ParseStream(
 		__localParameter_Variables,
 		NULL);
 	return __localVariable_MemoryBuffer;
+}
+
+void
+__ISFunction_ParseStreamIgnoreComment(
+	FILE* __localParameter_Stream,
+	const char __localParameter_Terminator)
+{
+	char __localVariable_Character;
+	while(ferror(__localParameter_Stream)==0&&
+		fread(&__localVariable_Character,1,1,__localParameter_Stream)==1)
+	{
+		if(__localVariable_Character=='\\') { fread(&__localVariable_Character,1,1,__localParameter_Stream); }
+		else if(__localVariable_Character==__localParameter_Terminator) { break; } }
+	return;
+}
+
+void
+__ISFunction_ParseStreamReleaseVariable(
+	struct __ISStructure_VariableItem* __localParameter_Variable)
+{
+	assert(__localParameter_Variable);
+	__ISFunction_ReleaseMemoryBuffer(
+		__localParameter_Variable->Name,
+		true);
+	__ISFunction_ReleaseMemoryBuffer(
+		__localParameter_Variable->Value,
+		true);
+	return;
 }
