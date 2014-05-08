@@ -1,10 +1,14 @@
-#include "Parser.h"
+#include "Document.h"
 #include "Miscellaneous.h"
+#include "Parser.h"
+#include "Support.h"
 
 #include <assert.h>
 
 #include <stdbool.h>
 #include <stdio.h>
+
+#include <string.h>
 
 #ifdef __ISDEFINITION_PARSER_SOURCE_DEFINE_MAIN
 
@@ -16,22 +20,27 @@ int main(
 	const int __localParameter_ArgumentLimit,
 	const char** __localParameter_ArgumentArray)
 {
-	(void)__localParameter_ArgumentArray;
-	(void)__localParameter_ArgumentLimit;
+	char* __localVariable_Terminator = __ISSupport_RetrieveParameter(
+		__localParameter_ArgumentLimit,
+		__localParameter_ArgumentArray,
+		"TERMINATOR",
+		NULL);
+	if(!__localVariable_Terminator) { __localVariable_Terminator = ""; }
 
+	struct __ISStructure_MemoryBuffer* __localVariable_MemoryBuffer = NULL;
+	struct __ISStructure_FIFOStackObject* __localVariable_Functions = NULL;
 	struct __ISStructure_FIFOStackObject* __localVariable_Variables = NULL;
-	struct __ISStructure_ParseConfiguration __localVariable_Configuration;
 
-	struct __ISStructure_MemoryBuffer* __localVariable_MemoryBuffer = __ISFunction_ParseStream(
+	while((__localVariable_MemoryBuffer=__ISFunction_ParseStream(
 		stdin,
+		__localVariable_Functions,
 		__localVariable_Variables,
-		&__localVariable_Configuration);
-
-	assert(__localVariable_MemoryBuffer);
-
-	assert(__ISFunction_WriteMemoryBufferToStream(
-		stdout,
-		__localVariable_MemoryBuffer));
+		__localVariable_Terminator[0])))
+	{
+		__ISFunction_WriteMemoryBufferToStream(
+			stdout,
+			__localVariable_MemoryBuffer);
+	}
 
 	return __ISDEFINITION_PARSER_MAIN_SUCCESS;
 }
@@ -41,29 +50,55 @@ int main(
 struct __ISStructure_MemoryBuffer*
 __ISFunction_ParseStream(
 	FILE* __localParameter_Stream,
+	struct __ISStructure_FIFOStackObject* __localParameter_Functions,
 	struct __ISStructure_FIFOStackObject* __localParameter_Variables,
-	struct __ISStructure_ParseConfiguration* __localParameter_Configuration)
+	const char __localParameter_Terminator)
 {
-	assert(__localParameter_Stream);
-
-	__ISType_MemoryUnit __localVariable_Current = 0;
-	__ISType_Size __localVariable_Index = 0;
+	bool __localVariable_ParseStream = true;
+	char __localVariable_Character = '\0';
 	struct __ISStructure_MemoryBuffer* __localVariable_MemoryBuffer = NULL;
-	struct __ISStructure_DictionaryNode* __localVariable_NewDictionary = (struct __ISStructure_DictionaryNode*)malloc(sizeof(*__localVariable_NewDictionary));
-
-	assert(__localVariable_NewDictionary);
-	__localVariable_NewDictionary->Data = NULL;
-	for(__localVariable_Index=0;
-		__localVariable_Index<__ISDEFINITION_MEMORYUNIT_SIZE;
-		__localVariable_Index++)
-	{ __localVariable_NewDictionary->KeyArray[__localVariable_Index] = NULL; }
-
+	__localParameter_Functions = __ISFunction_PushFIFOStack(
+		__localParameter_Functions,
+		NULL);
 	__localParameter_Variables = __ISFunction_PushFIFOStack(
 		__localParameter_Variables,
-		__localVariable_NewDictionary);
+		NULL);
 
-	while(fread(&__localVariable_Current,sizeof(__localVariable_Current),1,__localParameter_Stream)==1) {
+	assert(__localParameter_Functions);
+	assert(__localParameter_Variables);
+
+	while(__localVariable_ParseStream&&fread(&__localVariable_Character,1,1,__localParameter_Stream)==1&&
+		__localVariable_Character!=__localParameter_Terminator)
+	{
+		switch(__localVariable_Character) {
+			case('\\'): { if(fread(&__localVariable_Character,1,1,__localParameter_Stream)!=1) {
+				__localParameter_Stream = false;
+				break; } }
+			default: {
+				struct __ISStructure_MemoryBuffer* __localVariable_Temporary_MemoryBuffer = __ISFunction_CreateMemoryBufferFromArrays(
+					&(__localVariable_Character),
+					NULL,
+					1,
+					0);
+				__ISFunction_AppendMemoryBuffer(
+					__localVariable_MemoryBuffer,
+					__localVariable_Temporary_MemoryBuffer);
+				__localVariable_MemoryBuffer = __localVariable_Temporary_MemoryBuffer;
+				break; }
+		}
 	}
 
+	__ISFunction_ReleaseFIFOStack(
+		__localParameter_Functions->Object,
+		free);
+	__ISFunction_ReleaseFIFOStack(
+		__localParameter_Variables->Object,
+		free);
+	__ISFunction_PopFIFOStack(
+		__localParameter_Functions,
+		NULL);
+	__ISFunction_PopFIFOStack(
+		__localParameter_Variables,
+		NULL);
 	return __localVariable_MemoryBuffer;
 }

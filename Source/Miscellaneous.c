@@ -125,6 +125,43 @@ __ISFunction_PushFIFOStack(
 	return __localVariable_NewFIFOStackObject;
 }
 
+void
+__ISFunction_ReleaseFIFOStack(
+	struct __ISStructure_FIFOStackObject* __localParameter_FIFOStack,
+	void (*__externalFunction_ReleaseAction)(void*))
+{
+	struct __ISStructure_FIFOStackObject* __localParameter_TargetFIFOStack = NULL;
+	while(__localParameter_FIFOStack) {
+		if(__externalFunction_ReleaseAction&&__localParameter_FIFOStack->Object) { __externalFunction_ReleaseAction(__localParameter_FIFOStack->Object); }
+		__localParameter_TargetFIFOStack = __localParameter_FIFOStack;
+		__localParameter_FIFOStack = __localParameter_FIFOStack->Previous;
+		free(__localParameter_TargetFIFOStack); }
+	return;
+}
+
+void
+__ISFunction_ReleaseMemoryBuffer(
+	struct __ISStructure_MemoryBuffer* __localParameter_MemoryBuffer,
+	const bool __localParameter_ReleaseAll)
+{
+	struct __ISStructure_MemoryBuffer* __localVariable_MemoryBuffer = __localParameter_MemoryBuffer;
+	if(__localParameter_ReleaseAll) {  }
+	if(__localParameter_ReleaseAll) {
+		struct __ISStructure_MemoryBuffer* __localVariable_OldMemoryBuffer = NULL;
+		while(__localVariable_MemoryBuffer->Previous) { __localVariable_MemoryBuffer = __localVariable_MemoryBuffer->Previous; }
+		while(__localVariable_MemoryBuffer) {
+			if(__localVariable_MemoryBuffer->Data) { free(__localVariable_MemoryBuffer->Data); }
+			__localVariable_OldMemoryBuffer = __localVariable_MemoryBuffer;
+			__localVariable_MemoryBuffer = __localVariable_MemoryBuffer->Next;
+			free(__localVariable_OldMemoryBuffer); } }
+	else {
+		if(__localVariable_MemoryBuffer->Data) { free(__localVariable_MemoryBuffer->Data); }
+		if(__localVariable_MemoryBuffer->Next) { __localVariable_MemoryBuffer->Next->Previous = __localVariable_MemoryBuffer->Previous; }
+		if(__localVariable_MemoryBuffer->Previous) { __localVariable_MemoryBuffer->Previous->Next = __localVariable_MemoryBuffer->Next; }
+		free(__localVariable_MemoryBuffer); }
+	return;
+}
+
 __ISType_Size
 __ISFunction_RetrieveMemoryBufferLength(
 	const struct __ISStructure_MemoryBuffer* __localParameter_MemoryBuffer,
@@ -152,6 +189,65 @@ __ISFunction_RetrieveProcessorTime(
 	clock_t __localVariable_RetrievedTime = clock();
 	assert(__localVariable_RetrievedTime>=0);
 	return ((__localVariable_RetrievedTime*__localParameter_Resolution)/CLOCKS_PER_SEC)-__localParameter_Offset;
+}
+
+struct __ISStructure_MemoryBuffer*
+__ISFunction_RetrieveStreamSegmentIntoMemoryBuffer(
+	FILE* __localParameter_Stream,
+	const struct __ISStructure_MemoryBuffer* __localParameter_TerminatingSequence,
+	const __ISType_Size __localParameter_MaximumSegmentSize)
+{
+	__ISType_Size __localVariable_ComparisionIndex = 0;
+	__ISType_Size __localVariable_Index = 0;
+	__ISType_Size __localVariable_ReadSize = 0;
+	__ISType_Size __localVariable_UnitSize = sizeof(__ISType_MemoryUnit);
+	struct __ISStructure_MemoryBuffer* __localVariable_InitialMemoryBuffer = NULL;
+	struct __ISStructure_MemoryBuffer* __localVariable_InitialTerminatingSequence = (struct __ISStructure_MemoryBuffer*)__localParameter_TerminatingSequence;
+	struct __ISStructure_MemoryBuffer* __localVariable_MemoryBuffer = NULL;
+	struct __ISStructure_MemoryBuffer* __localVariable_TerminatingSequence = NULL;
+	while(__localVariable_InitialTerminatingSequence->Previous) { __localVariable_InitialTerminatingSequence = __localVariable_InitialTerminatingSequence->Previous; }
+	__localVariable_TerminatingSequence = __localVariable_InitialTerminatingSequence;
+
+	for(__localVariable_Index=0;
+		__localVariable_Index<__localParameter_MaximumSegmentSize;
+		__localVariable_Index++)
+	{
+		struct __ISStructure_MemoryBuffer* __localVariable_NewMemoryBuffer = (struct __ISStructure_MemoryBuffer*)malloc(sizeof(*__localVariable_MemoryBuffer));
+
+		assert(__localVariable_NewMemoryBuffer);
+
+		__localVariable_NewMemoryBuffer->Data = NULL;
+		__localVariable_NewMemoryBuffer->Next = NULL;
+		__localVariable_NewMemoryBuffer->Previous = __localVariable_MemoryBuffer;
+		__localVariable_NewMemoryBuffer->Size = __localVariable_UnitSize;
+
+		if(__localVariable_MemoryBuffer) { __localVariable_MemoryBuffer->Next = __localVariable_NewMemoryBuffer; }
+		else { __localVariable_InitialMemoryBuffer = __localVariable_NewMemoryBuffer; }
+
+		__localVariable_MemoryBuffer = __localVariable_NewMemoryBuffer;
+
+		__localVariable_ReadSize = fread(
+			&__localVariable_MemoryBuffer->Data,
+			__localVariable_UnitSize,
+			1,
+			__localParameter_Stream);
+		assert(__localVariable_ReadSize);
+		assert(ferror(__localParameter_Stream)==0);
+
+		if(__localVariable_TerminatingSequence&&__localVariable_TerminatingSequence->Data) {
+			if(__localVariable_TerminatingSequence->Data[__localVariable_ComparisionIndex++]==__localVariable_MemoryBuffer->Data[0]) {
+				if(!(__localVariable_ComparisionIndex<__localVariable_TerminatingSequence->Size)) {
+					if(__localVariable_TerminatingSequence->Next) {
+						__localVariable_TerminatingSequence = __localVariable_TerminatingSequence->Next;
+						__localVariable_ComparisionIndex = 0; }
+					else { break; } } }
+			else {
+				__localVariable_TerminatingSequence = __localVariable_InitialTerminatingSequence;
+				__localVariable_ComparisionIndex = 0; } }
+
+	}
+
+	return __localVariable_InitialMemoryBuffer;
 }
 
 __ISType_Time

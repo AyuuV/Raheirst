@@ -64,6 +64,16 @@ __ISFunction_PushFIFOStack(
 	struct __ISStructure_FIFOStackObject* __localParameter_FIFOStack,
 	void* __localParameter_Object);
 
+void
+__ISFunction_ReleaseFIFOStack(
+	struct __ISStructure_FIFOStackObject* __localParameter_FIFOStack,
+	void (*__externalFunction_ReleaseAction)(void*));
+
+void
+__ISFunction_ReleaseMemoryBuffer(
+	struct __ISStructure_MemoryBuffer* __localParameter_MemoryBuffer,
+	const bool __localParameter_ReleaseAll);
+
 __ISType_Size
 __ISFunction_RetrieveMemoryBufferLength(
 	const struct __ISStructure_MemoryBuffer* __localParameter_MemoryBuffer,
@@ -73,6 +83,12 @@ __ISType_Time
 __ISFunction_RetrieveProcessorTime(
 	const __ISType_Time __localParameter_Resolution,
 	const __ISType_Time __localParameter_Offset);
+
+struct __ISStructure_MemoryBuffer*
+__ISFunction_RetrieveStreamSegmentIntoMemoryBuffer(
+	FILE* __localParameter_Stream,
+	const struct __ISStructure_MemoryBuffer* __localParameter_TerminatingSequence,
+	const __ISType_Size __localParameter_MaximumSegmentSize);
 
 __ISType_Time
 __ISFunction_RetrieveWallTime(

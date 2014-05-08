@@ -85,7 +85,7 @@ __ISFunction_InsertDocumentNode(
 				__localParameter_SiblingNode->Siblings.Younger->Siblings.Older = __localVariable_Node; }
 			if(__localParameter_Parent&&__localParameter_Parent->Children.Youngest==__localParameter_SiblingNode) { __localParameter_Parent->Children.Youngest = __localVariable_Node; }
 			__localParameter_SiblingNode->Siblings.Younger = __localVariable_Node; }
-		else {
+		else if(__localParameter_Parent) {
 			if(!__localParameter_Parent->Children.Oldest) { __localParameter_Parent->Children.Oldest = __localVariable_Node; }
 			__localParameter_Parent->Children.Youngest = __localVariable_Node; } }
 	else {
@@ -97,7 +97,7 @@ __ISFunction_InsertDocumentNode(
 				__localParameter_SiblingNode->Siblings.Older->Siblings.Younger = __localVariable_Node; }
 			if(__localParameter_Parent&&__localParameter_Parent->Children.Oldest==__localParameter_SiblingNode) { __localParameter_Parent->Children.Oldest = __localVariable_Node; }
 			__localParameter_SiblingNode->Siblings.Older = __localVariable_Node; }
-		else {
+		else if(__localParameter_Parent) {
 			if(!__localParameter_Parent->Children.Youngest) { __localParameter_Parent->Children.Youngest = __localVariable_Node; }
 			__localParameter_Parent->Children.Oldest = __localVariable_Node; } }
 
