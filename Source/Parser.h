@@ -1,38 +1,78 @@
 #ifndef __ISDEFINITION_PARSER_HEADER
-#define __ISDEFINITION_PARSER_HEADER 3
+#define __ISDEFINITION_PARSER_HEADER 4
 
-#include "Document.h"
 #include "Miscellaneous.h"
 
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-struct __ISStructure_VariableItem {
+struct __ISStructure_ParserEnumerativeObject;
+struct __ISStructure_ParserEnumerativeObjectReference;
+struct __ISStructure_ParserFunctionNode;
+
+struct __ISStructure_ParserEnumerativeObject {
+
 	struct __ISStructure_MemoryBuffer* Name;
-	struct __ISStructure_MemoryBuffer* Value;
+	struct __ISStructure_ParserEnumerativeObject** Properties;
+
+	__ISType_Size References;
+	__ISType_Size Size;
+
+	struct {
+		struct __ISStructure_ParserFunctionNode* Access;
+		struct __ISStructure_ParserFunctionNode* Assignment;
+		struct __ISStructure_ParserFunctionNode* Creation;
+		struct __ISStructure_ParserFunctionNode* Release;
+	} Events;
+
+	enum {
+		__ISEnumeration_ParserEnumerativeObject_Custom,
+		__ISEnumeration_ParserEnumerativeObject_Function,
+		__ISEnumeration_ParserEnumerativeObject_Reference,
+		__ISEnumeration_ParserEnumerativeObject_Pointer,
+		__ISEnumeration_ParserEnumerativeObject_String
+	} Type;
+
+	union {
+
+		struct {
+			struct __ISStructure_MemoryBuffer* Type;
+			void* Value;
+		} Custom;
+
+		struct __ISStructure_ParserFunctionNode* Function;
+
+		struct __ISStructure_ParserEnumerativeObject* Pointer;
+
+		struct __ISStructure_ParserEnumerativeObjectReference* Reference;
+
+		struct __ISStructure_MemoryBuffer* String;
+
+	};
+
 };
 
-struct __ISStructure_MemoryBuffer*
-__ISFunction_ParseStream(
-	FILE* __localParameter_Stream,
-	struct __ISStructure_FIFOStackObject* __localParameter_Functions,
-	struct __ISStructure_FIFOStackObject* __localParameter_Variables,
-	const char __localParameter_Terminator,
-	const bool __localParameter_WhitespaceIgnorant);
+struct __ISStructure_ParserEnumerativeObjectReference {
+	__ISType_Size Size;
+	struct __ISStructure_MemoryBuffer** Segments;
+};
 
-void
-__ISFunction_ParseStreamIgnoreComment(
-	FILE* __localParameter_Stream,
-	const char __localParameter_Terminator);
+struct __ISStructure_ParserFunctionNode {
 
-void
-__ISFunction_ParseStreamReleaseVariable(
-	struct __ISStructure_VariableItem* __localParameter_Variable);
+	enum {
+		__ISEnumeration_ParserFunctionNode_Assignment
+	} Type;
 
-struct __ISStructure_VariableItem*
-__ISFunction_ParseStreamRetrieveVariable(
-	struct __ISStructure_FIFOStackObject* __localParameter_Variables,
-	const struct __ISStructure_MemoryBuffer* __localParameter_Name);
+	union {
+
+		struct {
+			struct __ISStructure_ParserEnumerativeObject* Object;
+			struct __ISStructure_ParserEnumerativeObject* Value;
+		} Assignment;
+
+	};
+
+};
 
 #endif

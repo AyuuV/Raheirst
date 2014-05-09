@@ -68,6 +68,36 @@ __ISFunction_CollateMemoryBuffers(
 	return __localVariable_MemoryBuffer;
 }
 
+char*
+__ISFunction_CreateArrayFromMemoryBuffer(
+	const struct __ISStructure_MemoryBuffer* __localParameter_MemoryBuffer,
+	const char __localParameter_Terminator)
+{
+	__ISType_Size __localVariable_Index = 0;
+	__ISType_Size __localVariable_ArrayIndex = 0;
+	__ISType_Size __localVariable_Size = __ISFunction_RetrieveMemoryBufferLength(__localParameter_MemoryBuffer,NULL);
+	struct __ISStructure_MemoryBuffer* __localVariable_MemoryBuffer = (struct __ISStructure_MemoryBuffer*)__localParameter_MemoryBuffer;
+	char* __localVariable_Array = (char*)malloc((__ISDEFINITION_SIZEOF_MEMORYUNIT*__localVariable_Size)+sizeof(__localParameter_Terminator));
+	while(__localVariable_MemoryBuffer&&__localVariable_MemoryBuffer->Previous) { __localVariable_MemoryBuffer = __localVariable_MemoryBuffer->Previous; }
+	if(__localVariable_Array) {
+		__localVariable_Array[__ISDEFINITION_SIZEOF_MEMORYUNIT*__localVariable_Size] = __localParameter_Terminator;
+		for(__localVariable_ArrayIndex=0,
+			__localVariable_Index=0;
+			__localVariable_ArrayIndex<__ISDEFINITION_SIZEOF_MEMORYUNIT*__localVariable_Size;
+			__localVariable_ArrayIndex++,
+			__localVariable_Index++)
+		{
+			assert(__localVariable_MemoryBuffer);
+			while(__localVariable_Index>=__localVariable_MemoryBuffer->Size) {
+				__localVariable_MemoryBuffer = __localVariable_MemoryBuffer->Next;
+				__localVariable_Index = 0;
+				assert(__localVariable_MemoryBuffer); }
+			__localVariable_Array[__ISDEFINITION_SIZEOF_MEMORYUNIT*__localVariable_ArrayIndex] = (__ISType_MemoryUnit)__localVariable_MemoryBuffer->Data[__localVariable_Index];
+		}
+	}
+	return __localVariable_Array;
+}
+
 struct __ISStructure_MemoryBuffer*
 __ISFunction_CreateMemoryBufferFromArrays(
 	const void* __localParameter_PrimaryArray,

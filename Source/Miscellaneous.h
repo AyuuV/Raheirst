@@ -10,6 +10,8 @@
 
 #include <time.h>
 
+#define __ISDEFINITION_SIZEOF_MEMORYUNIT sizeof(__ISType_MemoryUnit)
+
 #define __ISDEFINITION_MEMORYUNIT_SIZE UCHAR_MAX
 
 typedef unsigned char __ISType_MemoryUnit;
@@ -46,6 +48,11 @@ struct __ISStructure_MemoryBuffer*
 __ISFunction_CollateMemoryBuffers(
 	const struct __ISStructure_MemoryBuffer* __localParameter_Primary,
 	const struct __ISStructure_MemoryBuffer* __localParameter_Secondary);
+
+char*
+__ISFunction_CreateArrayFromMemoryBuffer(
+	const struct __ISStructure_MemoryBuffer* __localParameter_MemoryBuffer,
+	const char __localParameter_Terminator);
 
 struct __ISStructure_MemoryBuffer*
 __ISFunction_CreateMemoryBufferFromArrays(
