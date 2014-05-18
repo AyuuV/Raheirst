@@ -1,5 +1,7 @@
 ; Rainbow Heart - Boot.asm
 
+BITS 32
+
 __MultiBoot_Alignment equ 0x01<<0x00
 __MultiBoot_MemoryMap equ 0x01<<0x01
 __MultiBoot_Flags equ __MultiBoot_Alignment|__MultiBoot_MemoryMap
