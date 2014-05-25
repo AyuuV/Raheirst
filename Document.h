@@ -32,6 +32,10 @@ struct FLM_Document {
 };
 
 enum FLM_Function
+FLM_NewDocument(
+	struct FLM_Document** _document);
+
+enum FLM_Function
 FLM_OpenDocument(
 	struct FLM_Document** _document,
 	const char* _documentFilename,

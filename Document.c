@@ -13,6 +13,18 @@
 #include <string.h>
 
 enum FLM_Function
+FLM_NewDocument(
+	struct FLM_Document** _document)
+{
+	if(!_document||*_document) { return FLM_FunctionError|FLM_FunctionInvalidParameters; }
+	if(!(*_document=(struct FLM_Document*)malloc(sizeof(**_document)))) { return FLM_FunctionFailure|FLM_FunctionMemoryAllocationFailure; }
+
+
+
+	return FLM_FunctionSuccess;
+}
+
+enum FLM_Function
 FLM_OpenDocument(
 	struct FLM_Document** _document,
 	const char* _documentFilename,

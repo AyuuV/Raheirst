@@ -43,7 +43,10 @@ int main(
 	__argumentArray = _argumentArray;
 	__argumentCount = _argumentCount;
 
+	char* documentFilename = NULL;
 	char* parameterValue = NULL;
+
+	struct FLM_Document* mainDocument = NULL;
 
 	if((parameterValue=getParameter("version"))) {
 		if(strcasecmp(parameterValue,"display")==0x00) { fprintf(stdout,"[ **** Rainbow Heart ~ Iris Star **** ]\n --= Flowering Love Maiden =-- \nVersion 0.0.1\n"); }
@@ -52,6 +55,18 @@ int main(
 		else {
 			fprintf(stderr,"Invalid Version Display Mode [%s]\n",parameterValue);
 			return FLM_FUNCTION_ERROR; } }
+
+	if((documentFilename=getParameter("format"))) {
+		if(!(mainDocument=(struct*))) { return FLM_FUNCTION_FAILURE; }
+
+		if((parameterValue=getParameter("action"))) {
+
+		}
+		else {
+
+		}
+
+	}
 
 	return FLM_FUNCTION_SUCCESS;
 }
