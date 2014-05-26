@@ -16,7 +16,9 @@ int __argumentCount;
 char** __argumentArray;
 
 char*
-getParameter(const char* parameterName)
+getParameter(
+	const char* parameterName,
+	char* defaultValue)
 {
 	char* delimiterPosition = NULL;
 	char* parameterValue = NULL;
@@ -33,7 +35,8 @@ getParameter(const char* parameterName)
 			break; }
 	}
 
-	return parameterValue;
+	if(!parameterValue) { return defaultValue; }
+	else { return parameterValue; }
 }
 
 int main(
@@ -48,7 +51,7 @@ int main(
 
 	struct FLM_Document* mainDocument = NULL;
 
-	if((parameterValue=getParameter("version"))) {
+	if((parameterValue=getParameter("version",NULL))) {
 		if(strcasecmp(parameterValue,"display")==0x00) { fprintf(stdout,"[ **** Rainbow Heart ~ Iris Star **** ]\n --= Flowering Love Maiden =-- \nVersion 0.0.1\n"); }
 		else if(strcasecmp(parameterValue,"string")==0x00) { fprintf(stdout,"version 0.0.1\n"); }
 		else if(strcasecmp(parameterValue,"value")==0x00) { fprintf(stdout,"0.0.1\n"); }
@@ -56,16 +59,8 @@ int main(
 			fprintf(stderr,"Invalid Version Display Mode [%s]\n",parameterValue);
 			return FLM_FUNCTION_ERROR; } }
 
-	if((documentFilename=getParameter("format"))) {
-		if(!(mainDocument=(struct*))) { return FLM_FUNCTION_FAILURE; }
-
-		if((parameterValue=getParameter("action"))) {
-
-		}
-		else {
-
-		}
-
+	if((documentFilename=getParameter("format",NULL))) {
+		if(FLM_NewDocument(&mainDocument)!=FLM_FunctionSuccess) { return FLM_FUNCTION_FAILURE; }
 	}
 
 	return FLM_FUNCTION_SUCCESS;

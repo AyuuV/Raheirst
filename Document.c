@@ -16,12 +16,35 @@ enum FLM_Function
 FLM_NewDocument(
 	struct FLM_Document** _document)
 {
+	struct FLM_Document* targetDocument = NULL;
 	if(!_document||*_document) { return FLM_FunctionError|FLM_FunctionInvalidParameters; }
-	if(!(*_document=(struct FLM_Document*)malloc(sizeof(**_document)))) { return FLM_FunctionFailure|FLM_FunctionMemoryAllocationFailure; }
+	if(!(targetDocument=(struct FLM_Document*)malloc(sizeof(*targetDocument)))) { return FLM_FunctionFailure|FLM_FunctionMemoryAllocationFailure; }
 
+	targetDocument->blockInformation = (struct FLM_DocumentBlockInformation*)malloc(sizeof(*(targetDocument->blockInformation)));
+	targetDocument->data = (struct FLM_DocumentDataFile*)malloc(sizeof(*(targetDocument->data)));
+	targetDocument->index = (struct FLM_DocumentDataFile*)malloc(sizeof(*(targetDocument->index)));
 
+	if(targetDocument->blockInformation&&targetDocument->data&&targetDocument->index) {
+		targetDocument->blockInformation->blockLimit = FLM_DOCUMENT_DEFAULT_BLOCKLIMIT;
+		targetDocument->blockInformation->blockSize = FLM_DOCUMENT_DEFAULT_BLOCKSIZE;
+		targetDocument->blockInformation->initialFreeBlock = 0x00;
+		targetDocument->data->file = NULL;
+		targetDocument->data->filename = NULL;
+		targetDocument->data->limit = FLM_DOCUMENT_DEFAULT_DATAFILELIMIT;
+		targetDocument->data->offset = FLM_DOCUMENT_DEFAULT_DATAFILEOFFSET;
+		targetDocument->index->file = NULL;
+		targetDocument->index->filename = NULL;
+		targetDocument->index->limit = FLM_DOCUMENT_DEFAULT_DATAFILELIMIT;
+		targetDocument->index->offset = FLM_DOCUMENT_DEFAULT_DATAFILEOFFSET;
+		return FLM_FunctionSuccess; }
 
-	return FLM_FunctionSuccess;
+	if(targetDocument->blockInformation) { free(targetDocument->blockInformation); }
+	if(targetDocument->data) { free(targetDocument->data); }
+	if(targetDocument->index) { free(targetDocument->index); }
+
+	free(targetDocument);
+
+	return FLM_FunctionFailure|FLM_FunctionMemoryAllocationFailure;
 }
 
 enum FLM_Function
