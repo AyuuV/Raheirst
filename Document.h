@@ -7,6 +7,7 @@
 #ifndef FLM_DOCUMENT_DEFINITION
 #define FLM_DOCUMENT_DEFINITION FLM_DOCUMENT_DEFINITION_VALUE
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -46,6 +47,11 @@ FLM_OpenDocument(
 	struct FLM_Document** _document,
 	const char* _documentFilename,
 	const size_t _documentFileOffset);
+
+enum FLM_Function
+FLM_ReleaseDocument(
+	struct FLM_Document* _document,
+	const bool _closeFiles);
 
 enum FLM_Function
 FLM_WriteDocumentInformation(

@@ -66,6 +66,14 @@ FLM_OpenDocument(
 }
 
 enum FLM_Function
+FLM_ReleaseDocument(
+	struct FLM_Document* _document,
+	const bool _closeFiles)
+{
+	// TO DO
+}
+
+enum FLM_Function
 FLM_WriteDocumentInformation(
 	const struct FLM_Document* _document,
 	const char* _documentFilename,
