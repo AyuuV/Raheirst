@@ -4,7 +4,7 @@
 
 CC = gcc
 LD = gcc
-CFLAGS = -c -Wall -Wextra
+CFLAGS = -c -Wall -Wextra -g
 LDFLAGS =
 SOURCES = Main.c \
 	Document.c

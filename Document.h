@@ -51,7 +51,7 @@ FLM_OpenDocument(
 enum FLM_Function
 FLM_ReleaseDocument(
 	struct FLM_Document* _document,
-	const bool _closeFiles);
+	const bool _releaseExternal);
 
 enum FLM_Function
 FLM_WriteDocumentInformation(

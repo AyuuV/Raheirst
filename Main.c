@@ -5,6 +5,9 @@
 #include "Definition.h"
 #include "Document.h"
 
+#include <limits.h>
+
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,7 +64,22 @@ int main(
 
 	if((documentFilename=getParameter("format",NULL))) {
 		if(FLM_NewDocument(&mainDocument)!=FLM_FunctionSuccess) { return FLM_FUNCTION_FAILURE; }
-	}
+		if((parameterValue=getParameter("blocklimit",NULL))) { mainDocument->blockInformation->blockLimit = strtoul(parameterValue,NULL,0x00); }
+		if((parameterValue=getParameter("blocksize",NULL))) { mainDocument->blockInformation->blockSize = strtoul(parameterValue,NULL,0x00); }
+		if((parameterValue=getParameter("datalimit",NULL))) { mainDocument->data->limit = strtoul(parameterValue,NULL,0x00); }
+		if((parameterValue=getParameter("dataoffset",NULL))) { mainDocument->data->offset = strtoul(parameterValue,NULL,0x00); }
+		if((parameterValue=getParameter("indexlimit",NULL))) { mainDocument->index->limit = strtoul(parameterValue,NULL,0x00); }
+		if((parameterValue=getParameter("indexoffset",NULL))) { mainDocument->index->offset = strtoul(parameterValue,NULL,0x00); }
+
+		mainDocument->data->filename = getParameter("datafile","data.datafile");
+		mainDocument->index->filename = getParameter("indexfile","index.datafile");
+
+		if(FLM_WriteDocumentInformation(mainDocument,documentFilename,0x00)!=FLM_FunctionSuccess) { return FLM_FUNCTION_FAILURE; }
+
+		FLM_ReleaseDocument(mainDocument,false);
+		mainDocument = NULL; }
+
+	FLM_ReleaseDocument(mainDocument,true);
 
 	return FLM_FUNCTION_SUCCESS;
 }
