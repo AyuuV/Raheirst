@@ -53,6 +53,7 @@ int main(
 	char* parameterValue = NULL;
 
 	struct FLM_Document* mainDocument = NULL;
+	if(FLM_NewDocument(&mainDocument)!=FLM_FunctionSuccess) { abort(); }
 
 	if((parameterValue=getParameter("version",NULL))) {
 		if(strcasecmp(parameterValue,"display")==0x00) { fprintf(stdout,"[ **** Rainbow Heart ~ Iris Star **** ]\n --= Flowering Love Maiden =-- \nVersion 0.0.1\n"); }
@@ -60,24 +61,52 @@ int main(
 		else if(strcasecmp(parameterValue,"value")==0x00) { fprintf(stdout,"0.0.1\n"); }
 		else {
 			fprintf(stderr,"Invalid Version Display Mode [%s]\n",parameterValue);
-			return FLM_FUNCTION_ERROR; } }
+			abort(); } }
 
 	if((documentFilename=getParameter("format",NULL))) {
-		if(FLM_NewDocument(&mainDocument)!=FLM_FunctionSuccess) { return FLM_FUNCTION_FAILURE; }
 		if((parameterValue=getParameter("blocklimit",NULL))) { mainDocument->blockInformation->blockLimit = strtoul(parameterValue,NULL,0x00); }
+		else { mainDocument->blockInformation->blockLimit = -0x01; }
 		if((parameterValue=getParameter("blocksize",NULL))) { mainDocument->blockInformation->blockSize = strtoul(parameterValue,NULL,0x00); }
+		else { mainDocument->blockInformation->blockSize = 16; }
 		if((parameterValue=getParameter("datalimit",NULL))) { mainDocument->data->limit = strtoul(parameterValue,NULL,0x00); }
+		else { mainDocument->data->limit = -0x01; }
 		if((parameterValue=getParameter("dataoffset",NULL))) { mainDocument->data->offset = strtoul(parameterValue,NULL,0x00); }
+		else { mainDocument->data->offset = 0xFF; }
 		if((parameterValue=getParameter("indexlimit",NULL))) { mainDocument->index->limit = strtoul(parameterValue,NULL,0x00); }
+		else { mainDocument->index->limit = -0x01; }
 		if((parameterValue=getParameter("indexoffset",NULL))) { mainDocument->index->offset = strtoul(parameterValue,NULL,0x00); }
+		else { mainDocument->index->offset = 0xFF; }
 
 		mainDocument->data->filename = getParameter("datafile","data.datafile");
 		mainDocument->index->filename = getParameter("indexfile","index.datafile");
 
-		if(FLM_WriteDocumentInformation(mainDocument,documentFilename,0x00)!=FLM_FunctionSuccess) { return FLM_FUNCTION_FAILURE; }
+		if(FLM_WriteDocumentInformation(mainDocument,documentFilename,0x00)!=FLM_FunctionSuccess) { abort(); }
 
-		FLM_ReleaseDocument(mainDocument,false);
-		mainDocument = NULL; }
+		mainDocument->data->filename = NULL;
+		mainDocument->index->filename = NULL; }
+
+	if((documentFilename=getParameter("document",NULL))) {
+		if(FLM_ReadDocumentInformation(
+			mainDocument,
+			documentFilename,
+			0x00)!=FLM_FunctionSuccess)
+		{ abort(); }
+		if(FLM_OpenDocumentFiles(mainDocument)!=FLM_FunctionSuccess) { abort(); } }
+
+	if((parameterValue=getParameter("print",NULL))) {
+		if(strcasecmp(parameterValue,"documentinfo")==0x00) {
+			fprintf(stdout,"Block Size: %zu\n",mainDocument->blockInformation->blockSize);
+			fprintf(stdout,"Data File Maximum Size: %zu\n",mainDocument->data->limit);
+			fprintf(stdout,"Data File Name: %s\n",mainDocument->data->filename);
+			fprintf(stdout,"Data File Offset: %zu\n",mainDocument->data->offset);
+			fprintf(stdout,"Current Free Block: %zu\n",mainDocument->blockInformation->initialFreeBlock);
+			fprintf(stdout,"Index File Maximum Size: %zu\n",mainDocument->index->limit);
+			fprintf(stdout,"Index File Name: %s\n",mainDocument->index->filename);
+			fprintf(stdout,"Index File Offset: %zu\n",mainDocument->index->offset);
+			fprintf(stdout,"Maximum Blocks: %zu\n",mainDocument->blockInformation->blockLimit); }
+		else {
+			fprintf(stderr,"Invalid Print Property [%s]\n",parameterValue);
+			abort(); } }
 
 	FLM_ReleaseDocument(mainDocument,true);
 
