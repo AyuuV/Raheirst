@@ -89,9 +89,10 @@ int main(
 		if(FLM_ReadDocumentInformation(
 			mainDocument,
 			documentFilename,
-			0x00)!=FLM_FunctionSuccess)
+			0x00,
+			false)!=FLM_FunctionSuccess)
 		{ abort(); }
-		if(FLM_OpenDocumentFiles(mainDocument)!=FLM_FunctionSuccess) { abort(); } }
+		if(FLM_OpenDocumentFiles(mainDocument,true)!=FLM_FunctionSuccess) { abort(); } }
 
 	if((parameterValue=getParameter("print",NULL))) {
 		if(strcasecmp(parameterValue,"documentinfo")==0x00) {

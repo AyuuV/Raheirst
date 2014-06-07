@@ -43,13 +43,16 @@ FLM_NewDocument(
 	struct FLM_Document** _document);
 
 enum FLM_Function
-FLM_OpenDocumentFiles(struct FLM_Document* _document);
+FLM_OpenDocumentFiles(
+	struct FLM_Document* _document,
+	const bool _releasePrevious);
 
 enum FLM_Function
 FLM_ReadDocumentInformation(
 	struct FLM_Document* _document,
 	const char* _documentFilename,
-	const size_t _documentFileOffset);
+	const size_t _documentFileOffset,
+	const bool _ignoreExternal);
 
 enum FLM_Function
 FLM_ReadDocumentBlockInformation(
@@ -62,6 +65,7 @@ FLM_ReadDocumentDataFileInformation(
 	FILE* _documentFile,
 	struct FLM_DocumentDataFile* _documentDataFileInformation,
 	size_t* _documentDataFileNameLength,
+	bool* _documentDataFile,
 	const size_t _documentOffset);
 
 enum FLM_Function

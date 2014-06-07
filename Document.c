@@ -5,6 +5,7 @@
 #include "Definition.h"
 #include "Document.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -51,25 +52,25 @@ FLM_NewDocument(
 }
 
 enum FLM_Function
-FLM_OpenDocumentFiles(struct FLM_Document* _document)
+FLM_OpenDocumentFiles(
+	struct FLM_Document* _document,
+	const bool _releasePrevious)
 {
 	if(!_document||
 		!_document->blockInformation||
 		!_document->data||
-		!_document->index||
-		!_document->data->filename||
-		!_document->index->filename) { return FLM_FunctionError|FLM_FunctionInvalidParameters; }
+		!_document->index) { return FLM_FunctionError|FLM_FunctionInvalidParameters; }
 
-	FILE* documentDataFile = fopen(_document->data->filename,"r+b");
-	FILE* documentIndexFile = fopen(_document->index->filename,"r+b");
-
-	if(!documentDataFile&&!(documentDataFile=fopen(_document->data->filename,"w+b"))) { return FLM_FunctionFailure|FLM_FunctionInputAccessFailure|FLM_FunctionOutputAccessFailure|FLM_FunctionFileAccessFailure; }
-	if(!documentIndexFile&&!(documentDataFile=fopen(_document->index->filename,"w+b"))) { return FLM_FunctionFailure|FLM_FunctionInputAccessFailure|FLM_FunctionOutputAccessFailure|FLM_FunctionFileAccessFailure; }
-
-	if(_document->data->file&&fclose(_document->data->file)!=0x00) { return FLM_FunctionFailure|FLM_FunctionFileClosureFailure; }
-	else { _document->data->file = documentDataFile; }
-	if(_document->index->file&&fclose(_document->index->file)!=0x00) { return FLM_FunctionFailure|FLM_FunctionFileClosureFailure; }
-	else { _document->index->file = documentIndexFile; }
+	if(_document->data->filename) {
+		FILE* documentDataFile = fopen(_document->data->filename,"r+b");
+		if(!documentDataFile&&!(documentDataFile=fopen(_document->data->filename,"w+b"))) { return FLM_FunctionFailure|FLM_FunctionInputAccessFailure|FLM_FunctionOutputAccessFailure|FLM_FunctionFileAccessFailure; }
+		if(_releasePrevious&&_document->data->file&&fclose(_document->data->file)!=0x00) { return FLM_FunctionFailure|FLM_FunctionFileClosureFailure; }
+		_document->data->file = documentDataFile; }
+	if(_document->index->filename) {
+		FILE* documentIndexFile = fopen(_document->index->filename,"r+b");
+		if(!documentIndexFile&&!(documentIndexFile=fopen(_document->index->filename,"w+b"))) { return FLM_FunctionFailure|FLM_FunctionInputAccessFailure|FLM_FunctionOutputAccessFailure|FLM_FunctionFileAccessFailure; }
+		if(_releasePrevious&&_document->index->file&&fclose(_document->index->file)!=0x00) { return FLM_FunctionFailure|FLM_FunctionFileClosureFailure; }
+		_document->index->file = documentIndexFile; }
 
 	return FLM_FunctionSuccess;
 }
@@ -78,17 +79,34 @@ enum FLM_Function
 FLM_ReadDocumentInformation(
 	struct FLM_Document* _document,
 	const char* _documentFilename,
-	const size_t _documentFileOffset)
+	const size_t _documentFileOffset,
+	const bool _ignoreExternal)
 {
 	FILE* documentFile = NULL;
 
+	size_t documentDataFilenameLength = 0x00;
 	size_t documentDataOffset = _documentFileOffset;
 	size_t documentIndexOffset = 0x00;
 
-	size_t documentDataFilenameLength = 0x00;
+	bool usingMasterFile = false;
 
 	if(!(_document&&_documentFilename)) { return FLM_FunctionError|FLM_FunctionInvalidParameters; }
 	if(!_document->blockInformation||!_document->data||!_document->index) { return FLM_FunctionError|FLM_FunctionInvalidParameters; }
+
+	if(!_ignoreExternal) {
+		if(_document->data) {
+			if(_document->data->file&&fclose(_document->data->file)) { return FLM_FunctionFailure|FLM_FunctionFileClosureFailure; }
+			if(_document->data->filename) { free(_document->data->filename); } }
+		if(_document->index) {
+			if(_document->index->file&&fclose(_document->index->file)) { return FLM_FunctionFailure|FLM_FunctionFileClosureFailure; }
+			if(_document->index->filename) { free(_document->index->filename); } } }
+
+	if(_document->data) {
+		_document->data->file = NULL;
+		_document->data->filename = NULL; }
+	if(_document->index) {
+		_document->index->file = NULL;
+		_document->index->filename = NULL; }
 
 	documentDataOffset += sizeof(_document->blockInformation->blockLimit);
 	documentDataOffset += sizeof(_document->blockInformation->blockSize);
@@ -111,6 +129,7 @@ FLM_ReadDocumentInformation(
 		documentFile,
 		_document->data,
 		&documentDataFilenameLength,
+		&usingMasterFile,
 		documentDataOffset)!=FLM_FunctionSuccess)
 	{ return FLM_FunctionFailure|FLM_FunctionInputAccessFailure|FLM_FunctionSubFunctionFailure; }
 	else { documentIndexOffset += documentDataFilenameLength; }
@@ -119,10 +138,11 @@ FLM_ReadDocumentInformation(
 		documentFile,
 		_document->index,
 		NULL,
+		&usingMasterFile,
 		documentIndexOffset)!=FLM_FunctionSuccess)
 	{ return FLM_FunctionFailure|FLM_FunctionInputAccessFailure|FLM_FunctionSubFunctionFailure; }
 
-	if(fclose(documentFile)!=0x00) { return FLM_FunctionFailure|FLM_FunctionFileClosureFailure; }
+	if(!usingMasterFile&&fclose(documentFile)!=0x00) { return FLM_FunctionFailure|FLM_FunctionFileClosureFailure; }
 	else { return FLM_FunctionSuccess; }
 }
 
@@ -185,6 +205,7 @@ FLM_ReadDocumentDataFileInformation(
 	FILE* _documentFile,
 	struct FLM_DocumentDataFile* _documentDataFileInformation,
 	size_t* _documentDataFileNameLength,
+	bool* _documentDataFile,
 	const size_t _documentOffset)
 {
 	if(!(_documentDataFileInformation&&_documentFile)) { return FLM_FunctionError|FLM_FunctionInvalidParameters; }
@@ -216,18 +237,25 @@ FLM_ReadDocumentDataFileInformation(
 
 	if(_documentDataFileNameLength) { *_documentDataFileNameLength = documentDataFileNameLength; }
 
-	if(fseek(
-		_documentFile,
-		currentOffset,
-		SEEK_SET)!=0x00)
-	{ return FLM_FunctionFailure|FLM_FunctionInputAccessFailure|FLM_FunctionFileSeekFailure; }
-	if(fread(
-		_documentDataFileInformation->filename,
-		sizeof(*(_documentDataFileInformation->filename)),
-		documentDataFileNameLength,
-		_documentFile)!=documentDataFileNameLength)
-	{ return FLM_FunctionFailure|FLM_FunctionInputAccessFailure|FLM_FunctionFileReadFailure; }
-	else { currentOffset += documentDataFileNameLength; }
+	if(documentDataFileNameLength) {
+		if(fseek(
+			_documentFile,
+			currentOffset,
+			SEEK_SET)!=0x00)
+		{ return FLM_FunctionFailure|FLM_FunctionInputAccessFailure|FLM_FunctionFileSeekFailure; }
+		if(fread(
+			_documentDataFileInformation->filename,
+			sizeof(*(_documentDataFileInformation->filename)),
+			documentDataFileNameLength,
+			_documentFile)!=documentDataFileNameLength)
+		{ return FLM_FunctionFailure|FLM_FunctionInputAccessFailure|FLM_FunctionFileReadFailure; }
+		else { currentOffset += documentDataFileNameLength; }
+		if(_documentDataFile) { *_documentDataFile = false; }
+		_documentDataFileInformation->file = NULL; }
+	else {
+		if(_documentDataFile) { *_documentDataFile = true; }
+		_documentDataFileInformation->file = _documentFile;
+		_documentDataFileInformation->filename = NULL; }
 
 	if(fseek(
 		_documentFile,
@@ -261,17 +289,24 @@ FLM_ReleaseDocument(
 	struct FLM_Document* _document,
 	const bool _releaseExternal)
 {
+	bool ignoreIndexFile = false;
+	bool ignoreIndexFileName = false;
+
 	if(_document) {
 		if(_document->blockInformation) { free(_document->blockInformation); }
 		if(_document->data) {
+			if(_document->index) {
+				if(_document->index->file==_document->data->file) { ignoreIndexFile = true; }
+				if(_document->index->filename==_document->data->filename) { ignoreIndexFileName = true; } }
 			if(_document->data->file&&_releaseExternal&&fclose(_document->data->file)) { return FLM_FunctionFailure|FLM_FunctionFileClosureFailure; }
 			if(_document->data->filename&&_releaseExternal) { free(_document->data->filename); }
 			free(_document->data); }
 		if(_document->index) {
-			if(_document->index->file&&_releaseExternal&&fclose(_document->index->file)) { return FLM_FunctionFailure|FLM_FunctionFileClosureFailure; }
-			if(_document->index->filename&&_releaseExternal) { free(_document->index->filename); }
+			if(!ignoreIndexFile&&_document->index->file&&_releaseExternal&&fclose(_document->index->file)) { return FLM_FunctionFailure|FLM_FunctionFileClosureFailure; }
+			if(!ignoreIndexFileName&&_document->index->filename&&_releaseExternal) { free(_document->index->filename); }
 			free(_document->index); }
 		free(_document); }
+
 	return FLM_FunctionSuccess;
 }
 
@@ -388,12 +423,14 @@ FLM_WriteDocumentDataFileInformation(
 	const struct FLM_DocumentDataFile* _documentDataFileInformation,
 	const size_t _documentOffset)
 {
-	if(!(_documentDataFileInformation&&_documentDataFileInformation->filename&&_documentFile)) { return FLM_FunctionError|FLM_FunctionInvalidParameters; }
+	if(!(_documentDataFileInformation&&_documentFile)) { return FLM_FunctionError|FLM_FunctionInvalidParameters; }
 
 	size_t currentOffset = _documentOffset;
-	size_t documentDataFileNameLength = strlen(_documentDataFileInformation->filename);
+	size_t documentDataFileNameLength = 0x00;
 	size_t documentDataFileLimitSize = sizeof(_documentDataFileInformation->limit);
 	size_t documentDataFileOffsetSize = sizeof(_documentDataFileInformation->offset);
+
+	if(_documentDataFileInformation->filename) { documentDataFileNameLength = strlen(_documentDataFileInformation->filename); }
 
 	if(fseek(
 		_documentFile,
@@ -408,18 +445,19 @@ FLM_WriteDocumentDataFileInformation(
 	{ return FLM_FunctionFailure|FLM_FunctionOutputAccessFailure|FLM_FunctionFileWriteFailure; }
 	else { currentOffset += sizeof(documentDataFileNameLength); }
 
-	if(fseek(
-		_documentFile,
-		currentOffset,
-		SEEK_SET)!=0x00)
-	{ return FLM_FunctionFailure|FLM_FunctionOutputAccessFailure|FLM_FunctionFileSeekFailure; }
-	if(fwrite(
-		_documentDataFileInformation->filename,
-		sizeof(*(_documentDataFileInformation->filename)),
-		documentDataFileNameLength,
-		_documentFile)!=documentDataFileNameLength)
-	{ return FLM_FunctionFailure|FLM_FunctionOutputAccessFailure|FLM_FunctionFileWriteFailure; }
-	else { currentOffset += documentDataFileNameLength; }
+	if(documentDataFileNameLength) {
+		if(fseek(
+			_documentFile,
+			currentOffset,
+			SEEK_SET)!=0x00)
+		{ return FLM_FunctionFailure|FLM_FunctionOutputAccessFailure|FLM_FunctionFileSeekFailure; }
+		if(fwrite(
+			_documentDataFileInformation->filename,
+			sizeof(*(_documentDataFileInformation->filename)),
+			documentDataFileNameLength,
+			_documentFile)!=documentDataFileNameLength)
+		{ return FLM_FunctionFailure|FLM_FunctionOutputAccessFailure|FLM_FunctionFileWriteFailure; }
+		else { currentOffset += documentDataFileNameLength; } }
 
 	if(fseek(
 		_documentFile,
