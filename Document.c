@@ -28,6 +28,7 @@ FLM_NewDocument(
 	if(targetDocument->blockInformation&&targetDocument->data&&targetDocument->index) {
 		targetDocument->blockInformation->blockLimit = FLM_DOCUMENT_DEFAULT_BLOCKLIMIT;
 		targetDocument->blockInformation->blockSize = FLM_DOCUMENT_DEFAULT_BLOCKSIZE;
+		targetDocument->blockInformation->indexEntrySize = FLM_DOCUMENT_DEFAULT_ENTRYSIZE;
 		targetDocument->blockInformation->initialFreeBlock = 0x00;
 		targetDocument->data->file = NULL;
 		targetDocument->data->filename = NULL;
@@ -157,6 +158,7 @@ FLM_ReadDocumentBlockInformation(
 	size_t currentOffset = _documentOffset;
 	size_t documentBlockLimitSize = sizeof(_documentBlockInformation->blockLimit);
 	size_t documentBlockSizeSize = sizeof(_documentBlockInformation->blockSize);
+	size_t documentIndexEntrySize = sizeof(_documentBlockInformation->indexEntrySize);
 	size_t documentInitialFreeBlockSize = sizeof(_documentBlockInformation->initialFreeBlock);
 
 
@@ -185,6 +187,19 @@ FLM_ReadDocumentBlockInformation(
 		_documentFile)!=0x01)
 	{ return FLM_FunctionFailure|FLM_FunctionInputAccessFailure|FLM_FunctionFileReadFailure; }
 	else { currentOffset += documentBlockSizeSize; }
+
+	if(fseek(
+		_documentFile,
+		currentOffset,
+		SEEK_SET)!=0x00)
+	{ return FLM_FunctionFailure|FLM_FunctionInputAccessFailure|FLM_FunctionFileSeekFailure; }
+	if(fread(
+		&(_documentBlockInformation->indexEntrySize),
+		documentIndexEntrySize,
+		0x01,
+		_documentFile)!=0x01)
+	{ return FLM_FunctionFailure|FLM_FunctionInputAccessFailure|FLM_FunctionFileReadFailure; }
+	else { currentOffset += documentIndexEntrySize; }
 
 	if(fseek(
 		_documentFile,
@@ -374,6 +389,7 @@ FLM_WriteDocumentBlockInformation(
 	size_t currentOffset = _documentOffset;
 	size_t documentBlockLimitSize = sizeof(_documentBlockInformation->blockLimit);
 	size_t documentBlockSizeSize = sizeof(_documentBlockInformation->blockSize);
+	size_t documentIndexEntrySize = sizeof(_documentBlockInformation->indexEntrySize);
 	size_t documentInitialFreeBlockSize = sizeof(_documentBlockInformation->initialFreeBlock);
 
 
@@ -402,6 +418,19 @@ FLM_WriteDocumentBlockInformation(
 		_documentFile)!=0x01)
 	{ return FLM_FunctionFailure|FLM_FunctionOutputAccessFailure|FLM_FunctionFileWriteFailure; }
 	else { currentOffset += documentBlockSizeSize; }
+
+	if(fseek(
+		_documentFile,
+		currentOffset,
+		SEEK_SET)!=0x00)
+	{ return FLM_FunctionFailure|FLM_FunctionOutputAccessFailure|FLM_FunctionFileSeekFailure; }
+	if(fwrite(
+		&(_documentBlockInformation->indexEntrySize),
+		documentIndexEntrySize,
+		0x01,
+		_documentFile)!=0x01)
+	{ return FLM_FunctionFailure|FLM_FunctionOutputAccessFailure|FLM_FunctionFileWriteFailure; }
+	else { currentOffset += documentIndexEntrySize; }
 
 	if(fseek(
 		_documentFile,

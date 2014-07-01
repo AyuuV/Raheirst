@@ -79,7 +79,9 @@ int main(
 		if((parameterValue=getParameter("blocklimit",NULL,parameterIndex))) { mainDocument->blockInformation->blockLimit = strtoul(parameterValue,NULL,0x00); }
 		else { mainDocument->blockInformation->blockLimit = -0x01; }
 		if((parameterValue=getParameter("blocksize",NULL,parameterIndex))) { mainDocument->blockInformation->blockSize = strtoul(parameterValue,NULL,0x00); }
-		else { mainDocument->blockInformation->blockSize = 16; }
+		else { mainDocument->blockInformation->blockSize = 0x10; }
+		if((parameterValue=getParameter("indexsize",NULL,parameterIndex))) { mainDocument->blockInformation->indexEntrySize = strtoul(parameterValue,NULL,0x00); }
+		else { mainDocument->blockInformation->indexEntrySize = 0x80; }
 		if((parameterValue=getParameter("datalimit",NULL,parameterIndex))) { mainDocument->data->limit = strtoul(parameterValue,NULL,0x00); }
 		else { mainDocument->data->limit = -0x01; }
 		if((parameterValue=getParameter("dataoffset",NULL,parameterIndex))) { mainDocument->data->offset = strtoul(parameterValue,NULL,0x00); }
