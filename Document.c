@@ -3,6 +3,7 @@
 // Document.c
 
 #include "Definition.h"
+
 #include "Document.h"
 
 #include <stdbool.h>
