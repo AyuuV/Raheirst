@@ -75,7 +75,6 @@ int main(
 
 	while((documentFilename=getParameter("format",NULL,parameterIndex)))
 	{
-
 		if((parameterValue=getParameter("blocklimit",NULL,parameterIndex))) { mainDocument->blockInformation->blockLimit = strtoul(parameterValue,NULL,0x00); }
 		else { mainDocument->blockInformation->blockLimit = -0x01; }
 		if((parameterValue=getParameter("blocksize",NULL,parameterIndex))) { mainDocument->blockInformation->blockSize = strtoul(parameterValue,NULL,0x00); }
