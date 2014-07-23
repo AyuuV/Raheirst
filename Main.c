@@ -3,6 +3,8 @@
 // Main.c
 
 #include "Definition.h"
+
+#include "Config.h"
 #include "Document.h"
 
 #include <limits.h>
@@ -53,6 +55,7 @@ int main(
 	__argumentArray = _argumentArray;
 	__argumentCount = _argumentCount;
 
+	/*
 	char* documentFilename = NULL;
 	char* parameterValue = NULL;
 
@@ -146,6 +149,7 @@ int main(
 		mainDocument = NULL;
 		parameterIndex++;
 	}
+	*/
 
 	return FLM_FUNCTION_SUCCESS;
 }
