@@ -1,7 +1,7 @@
 // Rainbow Heart ~ Iris Star
 // Flowering Love Maiden
-// Config.c
+// Configuration.c
 
 #include "Definition.h"
 
-#include "Config.h"
+#include "Configuration.h"

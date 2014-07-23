@@ -4,7 +4,7 @@
 
 #include "Definition.h"
 
-#include "Config.h"
+#include "Configuration.h"
 #include "Document.h"
 
 #include <limits.h>

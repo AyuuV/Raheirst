@@ -7,7 +7,7 @@ LD = gcc
 CFLAGS = -c -Wall -Wextra -g
 LDFLAGS =
 SOURCES = Main.c \
-	Config.c \
+	Configuration.c \
 	Document.c
 OBJECTS = $(SOURCES:.c=.o)
 EXECUTABLE = Raheirst
