@@ -13,11 +13,26 @@
 enum FLM_InterpreterNodeType {
 	FLM_InterpreterNodeConditionalType,
 	FLM_InterpreterNodeConstantType,
+	FLM_InterpreterNodeControlType,
+	FLM_InterpreterNodeExternalType,
 	FLM_InterpreterNodeFunctionType,
-	FLM_InterpreterNodeUnprocessedType,
-	FLM_InterpreterNodeVariableType
+	FLM_InterpreterNodeLabelType,
+	FLM_InterpreterNodeOperatorType,
+	FLM_InterpreterNodeSelectorType,
+	FLM_InterpreterNodeUnprocessedType
 };
 
+enum FLM_InterpreterConditionalType {
+	FLM_InterpreterConditionalAnd,
+	FLM_InterpreterConditionalEquality,
+	FLM_InterpreterConditionalEqualGreater,
+	FLM_InterpreterConditionalEqualLesser,
+	FLM_InterpreterConditionalExclusive,
+	FLM_InterpreterConditionalGreater,
+	FLM_InterpreterConditionalLesser,
+	FLM_InterpreterConditionalNot,
+	FLM_InterpreterConditionalOr
+};
 enum FLM_InterpreterConstantType {
 	FLM_InterpreterConstantBoolType,
 	FLM_InterpreterConstantCharType,
@@ -26,13 +41,27 @@ enum FLM_InterpreterConstantType {
 	FLM_InterpreterConstantFloatType,
 	FLM_InterpreterConstantStringType
 };
+enum FLM_InterpreterControlType {
+	FLM_InterpreterControlJumpType,
+	FLM_InterpreterControlReturnType,
+	FLM_InterpreterControlWhileType,
+	FLM_InterpreterControlForType
+};
+enum FLM_InterpreterOperatorType {
+	FLM_InterpreterOperatorAdditionType,
+	FLM_InterpreterOperatorAssignmentType,
+	FLM_InterpreterOperatorDivisionType,
+	FLM_InterpreterOperatorModulusType,
+	FLM_InterpreterOperatorMultiplicationType,
+	FLM_InterpreterOperatorNegationType,
+	FLM_InterpreterOperatorSubtractionType
+};
 
 struct FLM_InterpreterStringBuffer {
 	size_t length;
 	char* value;
 };
-
-struct FLM_InterpreterNodeConstant {
+struct FLM_InterpreterConstant {
 	enum FLM_InterpreterConstantType type;
 	union {
 		bool boolean;
@@ -49,7 +78,13 @@ struct FLM_InterpreterNode {
 	struct FLM_InterpreterNode* next;
 	enum FLM_InterpreterNodeType type;
 	union {
-		struct FLM_InterpreterNodeConstant* constant;
+		enum FLM_InterpreterConditionalType conditional;
+		struct FLM_InterpreterConstant* constant;
+		enum FLM_InterpreterControlType* control;
+		int (*external)(int,char**);
+		void (*function)(void*);
+		struct FLM_InterpreterStringBuffer* label;
+		enum FLM_InterpreterOperatorType operator;
 	};
 };
 

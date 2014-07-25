@@ -6,6 +6,7 @@
 
 #include "Configuration.h"
 #include "Document.h"
+#include "Interpreter.h"
 
 #include <limits.h>
 
