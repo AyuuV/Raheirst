@@ -11,8 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// #define FLM_DOCUMENT_DOCUMENTSIZE_OFFSET 0x00
-
 #define FLM_DOCUMENT_DEFAULT_BLOCKLIMIT -0x01
 #define FLM_DOCUMENT_DEFAULT_BLOCKSIZE 0xFF
 

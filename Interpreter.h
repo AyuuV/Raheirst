@@ -8,7 +8,12 @@
 #define FLM_INTERPRETER_DEFINITION FLM_INTERPRETER_DEFINITION_VALUE
 
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
+
+#define FLM_INTERPRETER_COMMENTSTART_CHARACTER '#'
+#define FLM_INTERPRETER_COMMENTEND_CHARACTER '\n'
+#define FLM_INTERPRETER_ESCAPE_CHARACTER '\\'
 
 enum FLM_InterpreterNodeType {
 	FLM_InterpreterNodeConditionalType,
@@ -56,6 +61,12 @@ enum FLM_InterpreterOperatorType {
 	FLM_InterpreterOperatorNegationType,
 	FLM_InterpreterOperatorSubtractionType
 };
+enum FLM_InterpreterVariableType {
+	FLM_InterpreterVariableConstantType,
+	FLM_InterpreterVariableFunctionType,
+	FLM_InterpreterVariableReferenceType,
+	FLM_InterpreterVariableStructureType
+};
 
 struct FLM_InterpreterStringBuffer {
 	size_t length;
@@ -72,7 +83,6 @@ struct FLM_InterpreterConstant {
 		struct FLM_InterpreterStringBuffer* string;
 	};
 };
-
 struct FLM_InterpreterNode {
 	struct FLM_InterpreterNode* data;
 	struct FLM_InterpreterNode* next;
@@ -87,5 +97,31 @@ struct FLM_InterpreterNode {
 		enum FLM_InterpreterOperatorType operator;
 	};
 };
+
+struct FLM_InterpreterVariable {
+	struct FLM_InterpreterStringBuffer* identifier;
+	struct FLM_InterpreterVariable* next;
+	enum FLM_InterpreterVariableType type;
+	union {
+		struct FLM_InterpreterConstant* constant;
+		struct FLM_InterpreterNode* function;
+		struct FLM_InterpreterStringBuffer* reference;
+		struct FLM_InterpreterVariable* structure;
+	};
+};
+struct FLM_InterpreterVariableList {
+	struct FLM_InterpreterVariable* list;
+	struct FLM_InterpreterVariableList* previous;
+};
+
+enum FLM_Function
+FLM_ReadInterpreterText(
+	FILE* _interpreterText,
+	struct FLM_InterpreterVariableList** _interpreterDocument);
+
+enum FLM_Function
+FLM_ReadInterpreterToken(
+	FILE* _interpreterText,
+	struct FLM_InterpreterStringBuffer** _token);
 
 #endif
