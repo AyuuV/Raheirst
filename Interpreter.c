@@ -70,7 +70,7 @@ FLM_ReadInterpreterToken(
 			if(buffer[index]==FLM_INTERPRETER_COMMENTEND_CHARACTER&&!escape) { ignore = false; }
 			else if(buffer[index]==FLM_INTERPRETER_COMMENTSTART_CHARACTER&&!escape) { ignore = true; }
 
-			if(ignore||(isspace(buffer[index])&&!escape)) { continue; }
+			if(ignore||(isspace(buffer[index])&&!escape)) { alphanum = false; continue; }
 
 			if(!(newToken=(struct FLM_InterpreterTextToken*)malloc(sizeof(*newToken)))) { return FLM_FunctionFailure|FLM_FunctionMemoryAllocationFailure; }
 
