@@ -33,40 +33,76 @@ FLM_ReadInterpreterText(
 enum FLM_Function
 FLM_ReadInterpreterToken(
 	FILE* _interpreterText,
-	struct FLM_InterpreterStringBuffer** _token)
+	struct FLM_InterpreterTextToken** _token)
 {
 	if(!_interpreterText||!_token) { return FLM_FunctionError|FLM_FunctionInvalidParameters; }
 
-	struct characterBufferCharacter {
-		char character;
-		struct characterBufferCharacter* next;
-	} characterBuffer;
+	struct FLM_InterpreterTextToken* newToken = *_token;
+	struct FLM_InterpreterTextToken* previousToken = NULL;
 
+	bool alphanum = false;
+	bool escape = false;
 	bool ignore = false;
-	bool initialCharacter = true;
-	char ignoreCharacter = '\0';
-	size_t characterIndex = 0x00;
-	struct characterBufferCharacter* currentCharacter = &characterBuffer;
+	char buffer[FLM_INTERPRETER_TEXTTOKEN_BUFFERSIZE];
+	size_t bufferSize = 0x00;
+	size_t index = 0x00;
 
-	if(*_token) { free(*_token); }
-	if(!(*_token=(struct FLM_InterpreterStringBuffer*)malloc(sizeof(**_token)))) { return FLM_FunctionFailure|FLM_FunctionMemoryAllocationFailure; }
-
-	while((currentCharacter->character=fgetc(_interpreterText))!=EOF)
+	while(newToken)
 	{
-		if(currentCharacter->character==FLM_INTERPRETER_ESCAPE_CHARACTER&&(currentCharacter->character=fgetc(_interpreterText))!=EOF)
-		{ return FLM_FunctionFailure|FLM_FunctionInputAccessFailure|FLM_FunctionFileReadFailure; }
+		previousToken = newToken->next;
+		free(newToken);
+		newToken = previousToken;
+	}
 
-		if(!isalnum(currentCharacter->character)&&!initialCharacter) { ungetc(currentCharacter->character,_interpreterText); }
+	*_token = NULL;
 
-		if(currentCharacter->character==FLM_INTERPRETER_COMMENTSTART_CHARACTER)
+	while((bufferSize=fread(buffer,
+		sizeof(buffer[0]),
+		FLM_INTERPRETER_TEXTTOKEN_BUFFERSIZE,
+		_interpreterText)))
+	{
+		for(index=0x00;
+			index<bufferSize;
+			index++)
 		{
-			ignore = true;
-			ignoreCharacter = FLM_INTERPRETER_COMMENTEND_CHARACTER;
-		}
-		if(ignore) { if(currentCharacter->character==ignoreCharacter) { ignore = false; } else { continue; } }
-		else if(!initialCharacter) { initialCharacter = false; }
+			if(buffer[index]==FLM_INTERPRETER_ESCAPE_CHARACTER&&!escape) { escape = true; continue; }
 
-		characterIndex++;
+			if(buffer[index]==FLM_INTERPRETER_COMMENTEND_CHARACTER&&!escape) { ignore = false; }
+			else if(buffer[index]==FLM_INTERPRETER_COMMENTSTART_CHARACTER&&!escape) { ignore = true; }
+
+			if(ignore||(isspace(buffer[index])&&!escape)) { continue; }
+
+			if(!(newToken=(struct FLM_InterpreterTextToken*)malloc(sizeof(*newToken)))) { return FLM_FunctionFailure|FLM_FunctionMemoryAllocationFailure; }
+
+			newToken->child = false;
+			newToken->character = buffer[index];
+			newToken->next = NULL;
+
+			if(previousToken)
+			{
+				if(isalnum(buffer[index])||buffer[index]==FLM_INTERPRETER_EXTENSTION_CHARACTER)
+				{
+					if(alphanum) { previousToken->child = false; }
+					else { previousToken->child = true; }
+					alphanum = true;
+				}
+				else
+				{
+					previousToken->child = true;
+					alphanum = false;
+				}
+				previousToken->next = newToken;
+			}
+			else
+			{
+				*_token = newToken;
+				if(isalnum(buffer[index])||buffer[index]==FLM_INTERPRETER_EXTENSTION_CHARACTER) { alphanum = true; }
+				else { alphanum = false; }
+			}
+
+			previousToken = newToken;
+			if(escape) { escape = false; }
+		}
 	}
 
 	return FLM_FunctionSuccess;

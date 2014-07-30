@@ -56,6 +56,19 @@ int main(
 	__argumentArray = _argumentArray;
 	__argumentCount = _argumentCount;
 
+	printf("begin\n");
+	struct FLM_InterpreterTextToken* tokens = NULL;
+	printf("result %d\n",FLM_ReadInterpreterToken(stdin,&tokens));
+
+	while(tokens)
+	{
+		putchar(tokens->character);
+		if(tokens->child) { putchar('\n'); }
+		tokens = tokens->next;
+	}
+
+	printf("end\n");
+
 	/*
 	char* documentFilename = NULL;
 	char* parameterValue = NULL;

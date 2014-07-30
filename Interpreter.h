@@ -14,6 +14,9 @@
 #define FLM_INTERPRETER_COMMENTSTART_CHARACTER '#'
 #define FLM_INTERPRETER_COMMENTEND_CHARACTER '\n'
 #define FLM_INTERPRETER_ESCAPE_CHARACTER '\\'
+#define FLM_INTERPRETER_EXTENSTION_CHARACTER '_'
+
+#define FLM_INTERPRETER_TEXTTOKEN_BUFFERSIZE 0x0200
 
 enum FLM_InterpreterNodeType {
 	FLM_InterpreterNodeConditionalType,
@@ -101,6 +104,7 @@ struct FLM_InterpreterNode {
 struct FLM_InterpreterVariable {
 	struct FLM_InterpreterStringBuffer* identifier;
 	struct FLM_InterpreterVariable* next;
+	size_t references;
 	enum FLM_InterpreterVariableType type;
 	union {
 		struct FLM_InterpreterConstant* constant;
@@ -114,6 +118,12 @@ struct FLM_InterpreterVariableList {
 	struct FLM_InterpreterVariableList* previous;
 };
 
+struct FLM_InterpreterTextToken {
+	bool child;
+	char character;
+	struct FLM_InterpreterTextToken* next;
+};
+
 enum FLM_Function
 FLM_ReadInterpreterText(
 	FILE* _interpreterText,
@@ -122,6 +132,6 @@ FLM_ReadInterpreterText(
 enum FLM_Function
 FLM_ReadInterpreterToken(
 	FILE* _interpreterText,
-	struct FLM_InterpreterStringBuffer** _token);
+	struct FLM_InterpreterTextToken** _token);
 
 #endif
